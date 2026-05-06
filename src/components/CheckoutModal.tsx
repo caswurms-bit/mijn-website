@@ -1,4 +1,5 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -14,13 +15,9 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 // ─── Betaalformulier (binnen de Elements provider) ────────────────────────────
 function PaymentForm({
-  cart,
   total,
-  onClose,
 }: {
-  cart: any[];
   total: number;
-  onClose: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -243,7 +240,7 @@ export default function CheckoutModal({
                   locale: 'nl',
                 }}
               >
-                <PaymentForm cart={cart} total={total} onClose={onClose} />
+                <PaymentForm total={total} />
               </Elements>
             )}
           </div>
