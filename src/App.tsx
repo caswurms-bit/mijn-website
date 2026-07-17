@@ -3,6 +3,8 @@ import HeroScrollAnimation from './components/HeroScrollAnimation';
 import CheckoutModal from './components/CheckoutModal';
 import RequestBuildModal from './components/RequestBuildModal';
 import CustomBuildModal from './components/CustomBuildModal';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Settings,
@@ -603,13 +605,27 @@ const Footer = () => (
       <p className="text-slate-500 text-sm text-center">
         © {new Date().getFullYear()} Easy PiCi · Handgebouwde gaming pc's · Voorburg, NL
       </p>
-      <a
-        href="mailto:info@easypici.nl"
-        className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-2"
-      >
-        <Mail size={14} />
-        info@easypici.nl
-      </a>
+      <div className="flex items-center gap-4 sm:gap-6">
+        <a
+          href="/voorwaarden"
+          className="text-slate-400 hover:text-white transition-colors text-sm"
+        >
+          Voorwaarden
+        </a>
+        <a
+          href="/privacy"
+          className="text-slate-400 hover:text-white transition-colors text-sm"
+        >
+          Privacy
+        </a>
+        <a
+          href="mailto:info@easypici.nl"
+          className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-2"
+        >
+          <Mail size={14} />
+          info@easypici.nl
+        </a>
+      </div>
     </div>
   </footer>
 );
@@ -1024,6 +1040,11 @@ export default function App() {
 
   // Toon de succespagina als Stripe terugkeert met success=true
   if (isSuccess) return <SuccessPage />;
+
+  // Losse content-pagina's op basis van het pathname
+  const { pathname } = window.location;
+  if (pathname === '/voorwaarden') return <TermsPage />;
+  if (pathname === '/privacy') return <PrivacyPage />;
 
   const addToCart = (build: any) => setCart((prev) => [...prev, build]);
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
