@@ -5,6 +5,7 @@ import RequestBuildModal from './components/RequestBuildModal';
 import CustomBuildModal from './components/CustomBuildModal';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import TrustpilotWidget from './components/TrustpilotWidget';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Settings,
@@ -110,37 +111,6 @@ const BUILDS = [
     stockStatus: 'on-request',
     deliveryText: 'Wachttijd: 7 werkdagen',
     image: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_0bc1c8f467c4a64aa6e4090fe75e32e9dr-ezgif.com-png-to-webp-converter.webp',
-  },
-];
-
-const REVIEWS = [
-  {
-    name: 'Daan V.',
-    date: 'maart 2025',
-    rating: 5,
-    title: 'Absoluut top service',
-    text: 'Mijn Sweet-Spot build was binnen een week geleverd, netjes verpakt en meteen raak. Temperaturen zijn perfect, alles draait soepel. Echt aanrader.',
-  },
-  {
-    name: 'Kevin M.',
-    date: 'februari 2025',
-    rating: 5,
-    title: 'Eindelijk een eerlijke PC-shop',
-    text: 'Heb lang rondgekeken en overal vond ik opgeblazen prijzen. Easy PiCi geeft je gewoon eerlijk waar voor je geld. Budget DealHunter is een beest voor die prijs.',
-  },
-  {
-    name: 'Lotte B.',
-    date: 'januari 2025',
-    rating: 5,
-    title: 'Cadeau voor mijn broer — hij is door het dolle',
-    text: "Weinig verstand van pc's, maar ze hebben me super goed geholpen bij de keuze. De Easy Entry was perfect. Netjes gebouwd, geen gekke kabels zichtbaar.",
-  },
-  {
-    name: 'Sander K.',
-    date: 'december 2024',
-    rating: 5,
-    title: 'High-Tier verdient elke euro',
-    text: '4K gaming op ultra zonder frame drops. De kast ziet er ook geweldig uit. Je merkt direct dat dit gebouwd is door iemand die er écht iets van weet.',
   },
 ];
 
@@ -488,76 +458,10 @@ const StorySection = () => (
   </section>
 );
 
-const StarRating = ({ rating }: { rating: number }) => (
-  <div className="flex gap-0.5">
-    {[1, 2, 3, 4, 5].map((star) => (
-      <svg key={star} viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5" fill={star <= rating ? '#00b67a' : '#ddd'}>
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-      </svg>
-    ))}
-  </div>
-);
-
 const TrustpilotSection = () => (
   <section className="py-16 sm:py-24 px-4 sm:px-6 bg-slate-50">
     <div className="max-w-7xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="text-center mb-10 sm:mb-14"
-      >
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <svg viewBox="0 0 126 32" className="h-7 sm:h-9" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 2l3.09 6.26L26 9.27l-5 4.87 1.18 6.88L16 17.77l-6.18 3.25L11 14.14 6 9.27l6.91-1.01L16 2z" fill="#00b67a"/>
-            <text x="32" y="23" fontFamily="sans-serif" fontWeight="bold" fontSize="20" fill="#191919">Trustpilot</text>
-          </svg>
-        </div>
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <StarRating rating={5} />
-          <span className="text-2xl sm:text-3xl font-black text-slate-900">4.9</span>
-          <span className="text-slate-500 text-sm sm:text-base">op basis van onze reviews</span>
-        </div>
-        <p className="text-slate-400 text-sm">Lees wat klanten over ons zeggen</p>
-      </motion.div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        {REVIEWS.map((review, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: idx * 0.08 }}
-            className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] flex flex-col gap-2 sm:gap-3"
-          >
-            <StarRating rating={review.rating} />
-            <h4 className="font-bold text-slate-900 text-xs sm:text-base leading-snug">{review.title}</h4>
-            <p className="text-slate-500 text-[11px] sm:text-sm leading-relaxed flex-1 line-clamp-4">{review.text}</p>
-            <div className="flex items-center justify-between pt-1.5 sm:pt-2 border-t border-slate-100">
-              <span className="text-[10px] sm:text-xs font-semibold text-slate-700">{review.name}</span>
-              <span className="text-[10px] sm:text-xs text-slate-400">{review.date}</span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        className="text-center mt-8 sm:mt-10"
-      >
-        <a
-          href="https://www.trustpilot.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#00b67a] hover:text-[#009c67] transition-colors"
-        >
-          Bekijk alle reviews op Trustpilot
-          <ArrowRight size={15} />
-        </a>
-      </motion.div>
+      <TrustpilotWidget />
     </div>
   </section>
 );
