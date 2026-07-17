@@ -24,7 +24,7 @@ export default function CustomBuildModal({ onClose }: { onClose: () => void }) {
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/api/request-custom', {
+      const res = await fetch('https://api.easypici.nl/api/request-custom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, budget, wishes }),

@@ -22,7 +22,7 @@ export default function RequestBuildModal({
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:3001/api/request-build', {
+      const res = await fetch('https://api.easypici.nl/api/request-build', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, buildName, message }),

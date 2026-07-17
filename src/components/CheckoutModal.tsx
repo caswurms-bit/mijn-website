@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react';
+import type { FormEvent } from 'react'
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -131,7 +131,7 @@ export default function CheckoutModal({
 
   // Haal clientSecret op van de backend zodra de modal opent
   useEffect(() => {
-    fetch('http://localhost:3001/api/create-payment-intent', {
+    fetch('https://api.easypici.nl/api/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: cart }),
@@ -141,7 +141,7 @@ export default function CheckoutModal({
         if (data.clientSecret) setClientSecret(data.clientSecret);
         else setFetchError('Kon betaling niet starten. Controleer of de server draait.');
       })
-      .catch(() => setFetchError('Geen verbinding met de server (localhost:3001).'));
+      .catch(() => setFetchError('Geen verbinding met de server (api.easypici.nl).'));
   }, []);
 
   return (
