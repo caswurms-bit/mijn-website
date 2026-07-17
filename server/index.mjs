@@ -27,7 +27,7 @@ if (!STRIPE_KEY || STRIPE_KEY.includes('VERVANG')) {
 }
 
 const app = express();
-const PORT = process.env.SERVER_PORT || 3001;
+const PORT = process.env.PORT || process.env.SERVER_PORT || 3001;
 
 const stripe = new Stripe(STRIPE_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
