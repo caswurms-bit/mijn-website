@@ -38,7 +38,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
 
 // Sta verzoeken toe van de Vite dev server
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:4173'] }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:4173', 'https://easypici.nl', 'https://www.easypici.nl'] }));
 app.use(express.json());
 
 // ─── Health check ─────────────────────────────────────────────────────────────
