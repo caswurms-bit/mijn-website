@@ -558,7 +558,7 @@ const BuildModal = ({
   if (!build) return null;
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -570,7 +570,7 @@ const BuildModal = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden w-full max-w-[95vw] sm:max-w-[90vw] max-h-[90vh] sm:max-h-[90vh] shadow-2xl z-10 flex flex-col sm:flex-row"
+          className="relative bg-white rounded-none sm:rounded-3xl overflow-hidden w-full sm:max-w-[90vw] h-screen sm:h-auto sm:max-h-[90vh] shadow-2xl z-10 flex flex-col sm:flex-row"
         >
           {/* Fullscreen image overlay (mobiel) */}
           {imgFullscreen && (
@@ -586,14 +586,14 @@ const BuildModal = ({
           )}
           {/* Image — links op desktop, boven op mobiel */}
           <div
-            className="h-64 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative cursor-pointer sm:cursor-default"
+            className="h-80 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative cursor-pointer sm:cursor-default"
             onClick={() => setImgFullscreen(true)}
           >
             <img src={build.image} alt={build.name} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-transparent" />
             <button
               onClick={(e) => { e.stopPropagation(); onClose(); }}
-              className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+              className="absolute top-4 right-4 sm:top-3 sm:right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
             >
               <X size={16} />
             </button>
@@ -603,18 +603,18 @@ const BuildModal = ({
           </div>
           {/* Content — rechts op desktop, scroll */}
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto p-5 sm:p-7">
-              <div className="flex items-start justify-between mb-3">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-7">
+              <div className="flex items-start justify-between mb-4 sm:mb-3">
                 <div>
                   <h2 className="text-xl sm:text-3xl font-black text-slate-900">{build.name}</h2>
                   <p className="text-slate-500 text-sm hidden sm:block">{build.target}</p>
                 </div>
                 <span className="text-xl sm:text-3xl font-black text-brand-600 ml-3 shrink-0">{build.price}</span>
               </div>
-              <p className="text-slate-600 mb-4 leading-relaxed text-sm sm:text-base">{build.description}</p>
-              <div className="mb-4">
-                <h3 className="font-bold text-slate-900 mb-2 text-sm sm:text-base">Specificaties</h3>
-                <ul className="space-y-1.5">
+              <p className="text-slate-600 mb-5 sm:mb-4 leading-relaxed text-base">{build.description}</p>
+              <div className="mb-5 sm:mb-4">
+                <h3 className="font-bold text-slate-900 mb-3 sm:mb-2 text-sm sm:text-base">Specificaties</h3>
+                <ul className="space-y-2 sm:space-y-1.5">
                   {build.specs.map((spec: string, i: number) => (
                     <li key={i} className="flex items-center gap-2 text-sm sm:text-base text-slate-600">
                       <CheckCircle2 size={13} className="text-brand-500 shrink-0" />
@@ -623,13 +623,13 @@ const BuildModal = ({
                   ))}
                 </ul>
               </div>
-              <div className="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 space-y-1">
+              <div className="bg-slate-50 rounded-xl p-4 sm:p-3 text-sm text-slate-600 space-y-1.5 sm:space-y-1">
                 <p>🛡️ {build.warranty}</p>
                 <p>📦 {build.note}</p>
               </div>
 
               {/* Levertijd in modal */}
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-4 sm:mt-3 flex items-center gap-2">
                 <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${
                   build.stockStatus === 'in-stock' ? 'bg-green-500' :
                   build.stockStatus === 'on-request' ? 'bg-amber-400' : 'bg-slate-300'
@@ -639,7 +639,7 @@ const BuildModal = ({
             </div>
 
             {/* Sticky knop */}
-            <div className="shrink-0 p-4 sm:p-7 sm:pt-4 border-t border-slate-100 space-y-3">
+            <div className="shrink-0 p-5 sm:p-7 sm:pt-4 border-t border-slate-100 space-y-3">
               {build.stockStatus === 'in-stock' && (
                 <motion.button
                   onClick={handleAdd}
