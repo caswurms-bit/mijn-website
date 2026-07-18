@@ -545,7 +545,6 @@ const BuildModal = ({
   onAddToCart: (b: any) => void;
   onRequestBuild: (b: any) => void;
 }) => {
-  const [imgFullscreen, setImgFullscreen] = useState(false);
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
@@ -572,27 +571,12 @@ const BuildModal = ({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative bg-white rounded-none sm:rounded-3xl overflow-hidden w-full sm:max-w-[90vw] h-screen sm:h-auto sm:max-h-[90vh] shadow-2xl z-10 flex flex-col sm:flex-row"
         >
-          {/* Fullscreen image overlay (mobiel) */}
-          {imgFullscreen && (
-            <div
-              className="fixed inset-0 z-50 bg-black flex items-center justify-center sm:hidden"
-              onClick={() => setImgFullscreen(false)}
-            >
-              <img src={build.image} alt={build.name} className="w-full h-full object-contain" />
-              <button className="absolute top-4 right-4 w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-white">
-                <X size={18} />
-              </button>
-            </div>
-          )}
           {/* Image — links op desktop, boven op mobiel */}
-          <div
-            className="h-80 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative cursor-pointer sm:cursor-default"
-            onClick={() => setImgFullscreen(true)}
-          >
+          <div className="h-80 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative">
             <img src={build.image} alt={build.name} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-transparent" />
             <button
-              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              onClick={onClose}
               className="absolute top-4 right-4 sm:top-3 sm:right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
             >
               <X size={16} />
