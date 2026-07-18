@@ -262,11 +262,6 @@ const BuildCard = ({
           : 'border-slate-100 hover:border-brand-200 hover:shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] hover:-translate-y-1'
         }`}
     >
-      {build.badge && (
-        <div className="bg-brand-600 text-white text-[10px] sm:text-xs font-bold text-center py-1 sm:py-1.5 tracking-wide">
-          ⭐ {build.badge}
-        </div>
-      )}
       <div className="h-32 sm:h-48 overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 sm:hidden" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/0 to-transparent z-10 hidden sm:block" />
@@ -275,6 +270,11 @@ const BuildCard = ({
           alt={build.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
+        {build.badge && (
+          <span className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.25)]">
+            ⭐ {build.badge}
+          </span>
+        )}
         <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
           {build.target}
         </span>
