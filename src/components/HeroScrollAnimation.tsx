@@ -5,10 +5,12 @@ const DESKTOP_FRAME_COUNT = 240;
 // animatie toont — frameIndex = startFrame op scroll-positie 0 (zie animate()).
 const DESKTOP_START_FRAME = 0;
 const DESKTOP_BASE_URL =
-  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/front%20screen%201';
+  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/front%20screen';
 
-// Exacte delay-waarde per frame (0.016s of 0.017s), opgehaald via de Supabase
-// Storage API — het patroon is onregelmatig en niet te voorspellen.
+// Exacte delay-waarde per frame (0.016s of 0.017s) voor de "front screen" bucket,
+// opgehaald door elk frame_000 t/m frame_299 los te testen (HEAD-requests) tot
+// frame_240 een 404 gaf — er zijn dus 240 frames (000 t/m 239). Het patroon is
+// onregelmatig en niet te voorspellen.
 const DESKTOP_FRAME_DELAYS: string[] = [
   '0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016',
   '0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017',
@@ -76,6 +78,26 @@ function getFrameSrc(index: number) {
   return getDesktopFrameSrc(index);
 }
 
+// Leest de kleur van een pixel een paar px vanaf de linkerbovenhoek van de
+// afbeelding (om randartefacten te vermijden) via een tijdelijke 1x1 canvas.
+// Geeft null terug als het canvas "tainted" raakt door CORS-beperkingen.
+function sampleImageCornerColor(img: HTMLImageElement): string | null {
+  try {
+    const probeCanvas = document.createElement('canvas');
+    probeCanvas.width = 1;
+    probeCanvas.height = 1;
+    const probeCtx = probeCanvas.getContext('2d');
+    if (!probeCtx) return null;
+    const sampleX = Math.min(5, Math.max(0, img.naturalWidth - 1));
+    const sampleY = Math.min(5, Math.max(0, img.naturalHeight - 1));
+    probeCtx.drawImage(img, sampleX, sampleY, 1, 1, 0, 0, 1, 1);
+    const [r, g, b] = probeCtx.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  } catch {
+    return null;
+  }
+}
+
 interface HeroScrollAnimationProps {
   children?: React.ReactNode;
 }
@@ -86,7 +108,9 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const [isReady, setIsReady] = useState(false);
   const lastFrameIndex = useRef<number>(-1);
-  
+  const bgColor = useRef<string | null>(null);
+  const bgColorDetermined = useRef(false);
+
   const targetProgress = useRef(0);
   const currentProgress = useRef(0);
   const animationFrameId = useRef<number | null>(null);
@@ -103,6 +127,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     // Load start frame first — canvas only becomes visible once this is ready
     const startImg = new Image();
     startImg.referrerPolicy = 'no-referrer';
+    startImg.crossOrigin = 'anonymous'; // nodig om later pixels te mogen uitlezen (getImageData)
     startImg.src = getFrameSrc(startFrame);
     startImg.onload = () => {
       images[startFrame] = startImg;
@@ -119,6 +144,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       if (i === startFrame) continue;
       const img = new Image();
       img.referrerPolicy = 'no-referrer';
+      img.crossOrigin = 'anonymous';
       img.src = getFrameSrc(i);
       images[i] = img;
     }
@@ -151,15 +177,25 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     }
 
     if (img && canvas && context) {
+      // Achtergrondkleur eenmalig bepalen op basis van het eerste geladen frame
+      // (pixel-sample vanuit een hoek van de afbeelding) en daarna cachen.
+      if (!bgColorDetermined.current) {
+        bgColor.current = sampleImageCornerColor(img);
+        bgColorDetermined.current = true;
+        if (!bgColor.current) {
+          // Canvas tainted door CORS — val terug op wit.
+          bgColor.current = '#ffffff';
+        }
+      }
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
       const isMobile = window.innerWidth < 768;
       const baseRatio = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
-      // Desktop-frames ("front screen 1") tonen de pc te groot met pure cover-gedrag;
+      // Desktop-frames ("front screen") tonen de pc te groot met pure cover-gedrag;
       // op mobiel blijft dit 1 (dus ongewijzigd gedrag) zodat die frames intact blijven.
-      const scaleAdjustment = isMobile ? 1 : 0.75;
+      const scaleAdjustment = isMobile ? 1 : 0.6;
       const ratio = baseRatio * scaleAdjustment;
       const newWidth = imgWidth * ratio;
       const newHeight = imgHeight * ratio;
@@ -170,6 +206,9 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       const verticalOffset = (isMobile ? 20 * dpr : 40 * dpr) * scaleAdjustment;
       const horizontalOffset = 16 * dpr * scaleAdjustment;
       const y = (canvasHeight - newHeight) / 2 + verticalOffset;
+
+      context.fillStyle = bgColor.current ?? '#ffffff';
+      context.fillRect(0, 0, canvasWidth, canvasHeight);
       context.drawImage(img, x + horizontalOffset, y, newWidth, newHeight);
       lastFrameIndex.current = index;
     }
