@@ -44,8 +44,8 @@ const BUILDS = [
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 2 werkdagen',
     image: {
-      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
-      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/product%20foto%20zwart%20.png',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
     },
   },
   {
@@ -70,8 +70,8 @@ const BUILDS = [
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 2 werkdagen',
     image: {
-      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
-      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/product%20foto%20zwart%20.png',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
     },
   },
   {
@@ -95,8 +95,8 @@ const BUILDS = [
     stockStatus: 'on-request',
     deliveryText: 'Wachttijd: 7 werkdagen',
     image: {
-      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
-      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/product%20foto%20zwart%20.png',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
     },
   },
   {
