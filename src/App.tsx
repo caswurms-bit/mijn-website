@@ -27,6 +27,8 @@ const BUILDS = [
   {
     id: 'starter',
     name: 'Easy PiCi Starter',
+    tier: 'Starter',
+    quickSpec: 'RTX 5060 • 16 GB • 1080p High',
     price: '€ 1.299',
     priceNum: 1299,
     target: '1080p High / 1440p Ready',
@@ -52,6 +54,8 @@ const BUILDS = [
   {
     id: 'performance',
     name: 'Easy PiCi Performance',
+    tier: 'Performance',
+    quickSpec: 'RTX 5060 Ti • 32 GB • 1440p High',
     price: '€ 1.499',
     priceNum: 1499,
     target: '1440p High Gaming',
@@ -78,6 +82,8 @@ const BUILDS = [
   {
     id: 'pro',
     name: 'Easy PiCi Pro',
+    tier: 'Pro',
+    quickSpec: 'RTX 5070 • 32 GB • 1440p Ultra',
     price: '€ 1.699',
     priceNum: 1699,
     target: 'Ultra Gaming Performance',
@@ -103,6 +109,8 @@ const BUILDS = [
   {
     id: 'elite',
     name: 'Easy PiCi Elite',
+    tier: 'Elite',
+    quickSpec: 'RTX 5070 Ti • 32 GB • 4K Ultra',
     price: '€ 2.500',
     priceNum: 2500,
     target: 'High-End Gaming & Creatie',
@@ -315,7 +323,20 @@ const BuildCard = ({
         </span>
       </div>
       <div className="p-3 sm:p-6 flex flex-col flex-1">
-        <h3 className="text-sm sm:text-xl font-black text-slate-900 mb-1 sm:mb-2">{build.name}</h3>
+        <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 sm:gap-x-1.5 mb-1 sm:mb-1.5">
+          <span className={`text-[9px] sm:text-xs font-bold uppercase tracking-wider ${
+            build.id === 'performance' ? 'text-brand-600' : 'text-slate-400'
+          }`}>
+            {build.tier}
+          </span>
+          {build.id === 'performance' && (
+            <span className="text-[9px] sm:text-xs font-bold text-brand-600">⭐ Aanbevolen</span>
+          )}
+        </div>
+        <h3 className="text-sm sm:text-xl font-black text-slate-900 mb-1 sm:mb-1.5">{build.name}</h3>
+        <p className="text-[10px] sm:text-sm font-semibold text-slate-500 mb-1.5 sm:mb-2">
+          {build.quickSpec}
+        </p>
         <p className="text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4 flex-1 leading-relaxed line-clamp-2">
           {build.shortDesc}
         </p>
@@ -433,10 +454,46 @@ const BuildsSection = ({
           Wit
         </button>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        {BUILDS.map((build, idx) => (
-          <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
-        ))}
+      {/* Cube Series — starter/performance/pro delen dezelfde behuizing */}
+      <div className="mb-12 sm:mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-5 sm:mb-8"
+        >
+          <h3 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1.5 sm:mb-2">Cube Series</h3>
+          <p className="text-sm sm:text-base text-slate-500 max-w-xl">
+            Dezelfde premium behuizing, drie prestatieniveaus. Kies de build die bij jouw budget en games past.
+          </p>
+        </motion.div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          {BUILDS.filter((build) => build.id !== 'elite').map((build, idx) => (
+            <div key={build.id} className={idx === 2 ? 'col-span-2 lg:col-span-1' : ''}>
+              <BuildCard build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Elite Series — losse premium build met eigen foto */}
+      <div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-5 sm:mb-8"
+        >
+          <h3 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1.5 sm:mb-2">Elite Series</h3>
+          <p className="text-sm sm:text-base text-slate-500 max-w-xl">
+            Onze ultieme high-end build voor maximale prestaties.
+          </p>
+        </motion.div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
+            <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
+          ))}
+        </div>
       </div>
     </div>
   </section>
