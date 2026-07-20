@@ -43,7 +43,10 @@ const BUILDS = [
     note: 'Volledig geïnstalleerd geleverd — aansluiten en direct gamen.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 2 werkdagen',
-    image: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+    image: {
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+    },
   },
   {
     id: 'performance',
@@ -66,7 +69,10 @@ const BUILDS = [
     note: 'Meest gekozen — de beste prijs/prestatie van onze lineup.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 2 werkdagen',
-    image: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+    image: {
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+    },
   },
   {
     id: 'pro',
@@ -88,7 +94,10 @@ const BUILDS = [
     note: 'Op aanvraag gebouwd — zelfde kwaliteit en zorgvuldigheid als alle andere builds.',
     stockStatus: 'on-request',
     deliveryText: 'Wachttijd: 7 werkdagen',
-    image: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
+    image: {
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
+    },
   },
   {
     id: 'elite',
@@ -110,7 +119,9 @@ const BUILDS = [
     note: 'Onze flagship build — voor wie het maximale wil, zonder concessies.',
     stockStatus: 'on-request',
     deliveryText: 'Wachttijd: 7 werkdagen',
-    image: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_0bc1c8f467c4a64aa6e4090fe75e32e9dr-ezgif.com-png-to-webp-converter.webp',
+    image: {
+      black: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_0bc1c8f467c4a64aa6e4090fe75e32e9dr-ezgif.com-png-to-webp-converter.webp',
+    },
   },
 ];
 
@@ -243,6 +254,7 @@ const BuildCard = ({
 }) => {
   const [added, setAdded] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [color, setColor] = useState<'black' | 'white'>('black');
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -275,7 +287,7 @@ const BuildCard = ({
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 sm:hidden" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/0 to-transparent z-10 hidden sm:block" />
         <img
-          src={build.image}
+          src={build.image[color] ?? build.image.black}
           alt={build.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -287,6 +299,24 @@ const BuildCard = ({
         <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
           {build.target}
         </span>
+        {build.image.white && (
+          <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 z-20 flex items-center gap-1.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); setColor('black'); }}
+              className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-black transition-all duration-200 ${
+                color === 'black' ? 'ring-2 ring-white scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.4)]' : 'ring-1 ring-white/60'
+              }`}
+              aria-label="Zwarte behuizing"
+            />
+            <button
+              onClick={(e) => { e.stopPropagation(); setColor('white'); }}
+              className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white border border-slate-300 transition-all duration-200 ${
+                color === 'white' ? 'ring-2 ring-brand-500 scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.25)]' : 'ring-1 ring-slate-300'
+              }`}
+              aria-label="Witte behuizing"
+            />
+          </div>
+        )}
       </div>
       <div className="p-3 sm:p-6 flex flex-col flex-1">
         <h3 className="text-sm sm:text-xl font-black text-slate-900 mb-1 sm:mb-2">{build.name}</h3>
@@ -555,6 +585,7 @@ const BuildModal = ({
   onRequestBuild: (b: any) => void;
 }) => {
   const [added, setAdded] = useState(false);
+  const [color, setColor] = useState<'black' | 'white'>('black');
 
   const handleAdd = () => {
     if (added) return;
@@ -582,7 +613,7 @@ const BuildModal = ({
         >
           {/* Image — links op desktop, boven op mobiel */}
           <div className="h-80 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative">
-            <img src={build.image} alt={build.name} className="w-full h-full object-cover" />
+            <img src={build.image[color] ?? build.image.black} alt={build.name} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-transparent" />
             <button
               onClick={onClose}
@@ -593,6 +624,24 @@ const BuildModal = ({
             <span className="absolute bottom-3 left-3 text-xs font-bold text-white bg-brand-600 px-2.5 py-1 rounded-full sm:hidden">
               {build.target}
             </span>
+            {build.image.white && (
+              <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setColor('black'); }}
+                  className={`w-5 h-5 rounded-full bg-black transition-all duration-200 ${
+                    color === 'black' ? 'ring-2 ring-white scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.4)]' : 'ring-1 ring-white/60'
+                  }`}
+                  aria-label="Zwarte behuizing"
+                />
+                <button
+                  onClick={(e) => { e.stopPropagation(); setColor('white'); }}
+                  className={`w-5 h-5 rounded-full bg-white border border-slate-300 transition-all duration-200 ${
+                    color === 'white' ? 'ring-2 ring-brand-500 scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.25)]' : 'ring-1 ring-slate-300'
+                  }`}
+                  aria-label="Witte behuizing"
+                />
+              </div>
+            )}
           </div>
           {/* Content — rechts op desktop, scroll */}
           <div className="flex-1 flex flex-col min-h-0">
@@ -799,7 +848,7 @@ const CartPanelContent = ({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
           {cart.map((item, idx) => (
             <div key={idx} className="flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50/60">
-              <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-xl shrink-0" />
+              <img src={item.image.black} alt={item.name} className="w-16 h-16 object-cover rounded-xl shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-900 text-sm leading-tight">{item.name}</p>
                 <p className="text-slate-400 text-xs mt-0.5">{item.target}</p>

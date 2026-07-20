@@ -182,7 +182,7 @@ export default function CheckoutModal({
                 {cart.map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <img
-                      src={item.image}
+                      src={item.image.black}
                       alt={item.name}
                       className="w-12 h-12 rounded-xl object-cover shrink-0 opacity-90"
                     />
