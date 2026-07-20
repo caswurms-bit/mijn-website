@@ -125,32 +125,41 @@ const FEATURES = [
 
 const HeroSection = () => (
   <HeroScrollAnimation>
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-            Custom PC's.<br />
-            <span className="text-brand-400">Gebouwd om te winnen.</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-            Handgebouwde gaming pc's. Eerlijke prijs. Geen onzin.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="#builds"
-              className="px-8 py-4 bg-brand-600 text-white rounded-full text-lg font-bold hover:bg-brand-700 transition-colors shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2"
-            >
-              Bekijk Builds <ArrowRight size={20} />
-            </a>
-            <a
-              href="#story"
-              className="px-8 py-4 bg-white/10 text-white rounded-full text-lg font-bold hover:bg-white/20 transition-colors"
-            >
-              Ons Verhaal
-            </a>
-          </div>
-        </motion.div>
-      </div>
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-between overflow-hidden px-4 pt-28 pb-16 sm:pt-36 sm:pb-20">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        className="relative z-10 text-center max-w-5xl mx-auto"
+      >
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
+          Custom PC's.<br />
+          <span className="text-brand-400">Gebouwd om te winnen.</span>
+        </h1>
+        <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto">
+          Handgebouwde gaming pc's. Eerlijke prijs. Geen onzin.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.15 }}
+        className="relative z-10 flex flex-col sm:flex-row gap-4 justify-center"
+      >
+        <a
+          href="#builds"
+          className="px-8 py-4 bg-brand-600 text-white rounded-full text-lg font-bold hover:bg-brand-700 transition-colors shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2"
+        >
+          Bekijk Builds <ArrowRight size={20} />
+        </a>
+        <a
+          href="#story"
+          className="px-8 py-4 bg-white/10 text-white rounded-full text-lg font-bold hover:bg-white/20 transition-colors"
+        >
+          Ons Verhaal
+        </a>
+      </motion.div>
     </div>
   </HeroScrollAnimation>
 );
