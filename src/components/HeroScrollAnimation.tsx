@@ -5,13 +5,14 @@ const DESKTOP_FRAME_COUNT = 240;
 // animatie toont — frameIndex = startFrame op scroll-positie 0 (zie animate()).
 const DESKTOP_START_FRAME = 0;
 const DESKTOP_BASE_URL =
-  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/front%20screen';
+  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/front%20screen%201';
 
-// Exacte delay-waarde per frame (0.016s of 0.017s) voor de "front screen" bucket,
+// Exacte delay-waarde per frame (0.016s of 0.017s) voor de "front screen 1"
+// bucket (nieuwe upload, andere content dan de vorige "front screen" bucket),
 // opgehaald door elk frame_000 t/m frame_299 los te testen (HEAD-requests) tot
 // frame_240 een 404 gaf — er zijn dus 240 frames (000 t/m 239). Het patroon is
 // onregelmatig en niet te voorspellen. Gedeeld tussen desktop én mobiel, want
-// beide gebruiken dezelfde "front screen" frame-set.
+// beide gebruiken dezelfde frame-set.
 const FRAME_DELAYS: string[] = [
   '0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016',
   '0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017',
