@@ -43,7 +43,7 @@ const BUILDS = [
     note: 'Volledig geïnstalleerd geleverd — aansluiten en direct gamen.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 2 werkdagen',
-    image: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_4bb8aa652cf98c4823146a8fcf6dad1bdr-ezgif.com-png-to-webp-converter.webp',
+    image: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
   },
   {
     id: 'performance',
@@ -66,7 +66,7 @@ const BUILDS = [
     note: 'Meest gekozen — de beste prijs/prestatie van onze lineup.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 2 werkdagen',
-    image: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_99724a61ccc23c4b0164ab02df199c55dr-ezgif.com-png-to-webp-converter.webp',
+    image: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/1a18d117d714e658fa1957d70e9f10bf1395a65efaf982d23167d8bc1690f6fb-ezgif.com-jpg-to-webp-converter.webp',
   },
   {
     id: 'pro',
@@ -88,7 +88,7 @@ const BUILDS = [
     note: 'Op aanvraag gebouwd — zelfde kwaliteit en zorgvuldigheid als alle andere builds.',
     stockStatus: 'on-request',
     deliveryText: 'Wachttijd: 7 werkdagen',
-    image: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_2e7442d946b9843ac654e1b6336546b9eg-ezgif.com-png-to-webp-converter.webp',
+    image: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/696126b9b32d2b18f48d8a8cc96dcaddd0cc9f7e1d2e7c22e3cfacdb2eb42551-ezgif.com-jpg-to-webp-converter.webp',
   },
   {
     id: 'elite',
