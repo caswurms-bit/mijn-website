@@ -211,12 +211,13 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       const x = (canvasWidth - newWidth) / 2;
       const dpr = window.devicePixelRatio || 1;
       // Offsets proportioneel meeschalen zodat de positionering relatief
-      // t.o.v. het kleinere beeld gelijk blijft aan voorheen. Mobiel krijgt
-      // nog een verdere correctie bovenop de vorige aanpassing (was 34/6,
-      // daarvoor 20/16) — verder naar beneden en verder naar links.
+      // t.o.v. het kleinere beeld gelijk blijft aan voorheen. Mobiel: derde
+      // correctie op rij, deze keer met dubbele stapgrootte t.o.v. de vorige
+      // (was 54/-4, daarvoor 34/6, daarvoor 20/16) voor een duidelijk
+      // merkbare verschuiving verder naar beneden en verder naar links.
       // Desktop blijft ongewijzigd.
-      const verticalOffset = (isMobile ? 54 * dpr : 40 * dpr) * scaleAdjustment;
-      const horizontalOffset = (isMobile ? -4 * dpr : 16 * dpr) * scaleAdjustment;
+      const verticalOffset = (isMobile ? 94 * dpr : 40 * dpr) * scaleAdjustment;
+      const horizontalOffset = (isMobile ? -24 * dpr : 16 * dpr) * scaleAdjustment;
       const y = (canvasHeight - newHeight) / 2 + verticalOffset;
 
       context.fillStyle = bgColor.current ?? '#ffffff';
