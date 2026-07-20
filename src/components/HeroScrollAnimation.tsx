@@ -193,16 +193,16 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       const imgHeight = img.naturalHeight;
       const isMobile = window.innerWidth < 768;
       const baseRatio = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
-      // Desktop-frames ("front screen") tonen de pc te groot met pure cover-gedrag;
-      // op mobiel blijft dit 1 (dus ongewijzigd gedrag) zodat die frames intact blijven.
-      const scaleAdjustment = isMobile ? 1 : 0.6;
+      // Pure cover-gedrag toont de pc te groot/uitgezoomd — op zowel desktop
+      // als mobiel verkleinen we het eindresultaat met dezelfde factor.
+      const scaleAdjustment = 0.6;
       const ratio = baseRatio * scaleAdjustment;
       const newWidth = imgWidth * ratio;
       const newHeight = imgHeight * ratio;
       const x = (canvasWidth - newWidth) / 2;
       const dpr = window.devicePixelRatio || 1;
       // Offsets proportioneel meeschalen zodat de positionering relatief
-      // t.o.v. het (op desktop) kleinere beeld gelijk blijft aan voorheen.
+      // t.o.v. het kleinere beeld gelijk blijft aan voorheen.
       const verticalOffset = (isMobile ? 20 * dpr : 40 * dpr) * scaleAdjustment;
       const horizontalOffset = 16 * dpr * scaleAdjustment;
       const y = (canvasHeight - newHeight) / 2 + verticalOffset;
@@ -215,7 +215,9 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   };
 
   const animate = () => {
-    const lerpFactor = 0.12;
+    // Lager dan voorheen (was 0.12) voor een vloeiendere, meer cinematic
+    // "glide" i.p.v. dat de animatie direct 1-op-1 met de scroll meeschiet.
+    const lerpFactor = 0.08;
     const diff = targetProgress.current - currentProgress.current;
     currentProgress.current += diff * lerpFactor;
 
