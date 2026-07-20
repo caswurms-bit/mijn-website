@@ -255,6 +255,10 @@ const BuildCard = ({
   const [added, setAdded] = useState(false);
   const [touched, setTouched] = useState(false);
   const [color, setColor] = useState<'black' | 'white'>('black');
+  // Nieuwe "los product op witte/zwarte achtergrond"-foto's (starter/performance/pro)
+  // vs. de oude sfeervolle build-foto's (elite) — bepaalt of we object-contain +
+  // witte achtergrond gebruiken i.p.v. object-cover + donkere gradient-overlay.
+  const isProductPhoto = Boolean(build.image.white);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -283,13 +287,21 @@ const BuildCard = ({
           : 'border-slate-100 hover:border-brand-200 hover:shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] hover:-translate-y-1'
         }`}
     >
-      <div className="h-32 sm:h-48 overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 sm:hidden" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/0 to-transparent z-10 hidden sm:block" />
+      <div className={`h-32 sm:h-48 overflow-hidden relative ${isProductPhoto ? 'bg-white' : ''}`}>
+        {!isProductPhoto && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 sm:hidden" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/0 to-transparent z-10 hidden sm:block" />
+          </>
+        )}
         <img
           src={build.image[color] ?? build.image.black}
           alt={build.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className={
+            isProductPhoto
+              ? 'w-full h-full object-contain p-4 sm:p-6'
+              : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
+          }
         />
         {build.badge && (
           <span className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.25)]">
@@ -595,6 +607,9 @@ const BuildModal = ({
   };
 
   if (!build) return null;
+  // Zelfde onderscheid als in BuildCard: nieuwe productfoto's met witte/zwarte
+  // achtergrond (starter/performance/pro) vs. de oude sfeervolle foto (elite).
+  const isProductPhoto = Boolean(build.image.white);
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
@@ -612,9 +627,15 @@ const BuildModal = ({
           className="relative bg-white rounded-none sm:rounded-3xl overflow-hidden w-full sm:max-w-[90vw] h-screen sm:h-auto sm:max-h-[90vh] shadow-2xl z-10 flex flex-col sm:flex-row"
         >
           {/* Image — links op desktop, boven op mobiel */}
-          <div className="h-80 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative">
-            <img src={build.image[color] ?? build.image.black} alt={build.name} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-transparent" />
+          <div className={`h-80 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative ${isProductPhoto ? 'bg-white' : ''}`}>
+            <img
+              src={build.image[color] ?? build.image.black}
+              alt={build.name}
+              className={isProductPhoto ? 'w-full h-full object-contain p-6 sm:p-10' : 'w-full h-full object-cover'}
+            />
+            {!isProductPhoto && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-transparent" />
+            )}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 sm:top-3 sm:right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
