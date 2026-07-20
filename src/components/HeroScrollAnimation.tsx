@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 const DESKTOP_FRAME_COUNT = 240;
-// Proportioneel geschaald vanaf de oude waarde (45 van de 104 frames, ~43%).
-const DESKTOP_START_FRAME = 104;
+// Frame 0, zodat de pagina bij het laden (scroll = 0) het begin van de
+// animatie toont — frameIndex = startFrame op scroll-positie 0 (zie animate()).
+const DESKTOP_START_FRAME = 0;
 const DESKTOP_BASE_URL =
   'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/front%20screen%201';
 
@@ -155,13 +156,19 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
       const isMobile = window.innerWidth < 768;
-      const ratio = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
+      const baseRatio = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
+      // Desktop-frames ("front screen 1") tonen de pc te groot met pure cover-gedrag;
+      // op mobiel blijft dit 1 (dus ongewijzigd gedrag) zodat die frames intact blijven.
+      const scaleAdjustment = isMobile ? 1 : 0.75;
+      const ratio = baseRatio * scaleAdjustment;
       const newWidth = imgWidth * ratio;
       const newHeight = imgHeight * ratio;
       const x = (canvasWidth - newWidth) / 2;
       const dpr = window.devicePixelRatio || 1;
-      const verticalOffset = isMobile ? 20 * dpr : 40 * dpr;
-      const horizontalOffset = 16 * dpr;
+      // Offsets proportioneel meeschalen zodat de positionering relatief
+      // t.o.v. het (op desktop) kleinere beeld gelijk blijft aan voorheen.
+      const verticalOffset = (isMobile ? 20 * dpr : 40 * dpr) * scaleAdjustment;
+      const horizontalOffset = 16 * dpr * scaleAdjustment;
       const y = (canvasHeight - newHeight) / 2 + verticalOffset;
       context.drawImage(img, x + horizontalOffset, y, newWidth, newHeight);
       lastFrameIndex.current = index;
