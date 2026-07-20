@@ -10,8 +10,9 @@ const DESKTOP_BASE_URL =
 // Exacte delay-waarde per frame (0.016s of 0.017s) voor de "front screen" bucket,
 // opgehaald door elk frame_000 t/m frame_299 los te testen (HEAD-requests) tot
 // frame_240 een 404 gaf — er zijn dus 240 frames (000 t/m 239). Het patroon is
-// onregelmatig en niet te voorspellen.
-const DESKTOP_FRAME_DELAYS: string[] = [
+// onregelmatig en niet te voorspellen. Gedeeld tussen desktop én mobiel, want
+// beide gebruiken dezelfde "front screen" frame-set.
+const FRAME_DELAYS: string[] = [
   '0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016',
   '0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017',
   '0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.017',
@@ -38,10 +39,11 @@ const DESKTOP_FRAME_DELAYS: string[] = [
   '0.017','0.016','0.017','0.017','0.016','0.017','0.017','0.016','0.017','0.016',
 ];
 
-const MOBILE_FRAME_COUNT = 70;
+// Zelfde bron-set als desktop ("front screen" bucket, 240 frames), dus
+// afgeleid van de desktop-constanten om drift tussen beide te voorkomen.
+const MOBILE_FRAME_COUNT = DESKTOP_FRAME_COUNT;
 const MOBILE_START_FRAME = 0;
-const MOBILE_BASE_URL =
-  'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/video%20voor%20telefoon';
+const MOBILE_BASE_URL = DESKTOP_BASE_URL;
 
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
@@ -59,16 +61,21 @@ function easeScrollProgress(p: number) {
   return eased;
 }
 
-function getDesktopFrameSrc(index: number) {
+// Gedeelde URL-opbouw: desktop en mobiel gebruiken dezelfde "front screen"
+// frame-set (zelfde bestandsnaampatroon en delay-mapping), enkel de base-URL
+// kan in theorie uiteenlopen — vandaar de aparte functies die 'm doorgeven.
+function getFrontScreenFrameSrc(baseUrl: string, index: number) {
   const padded = index.toString().padStart(3, '0');
-  const delay = DESKTOP_FRAME_DELAYS[index];
-  return `${DESKTOP_BASE_URL}/frame_${padded}_delay-${delay}s.png`;
+  const delay = FRAME_DELAYS[index];
+  return `${baseUrl}/frame_${padded}_delay-${delay}s.png`;
+}
+
+function getDesktopFrameSrc(index: number) {
+  return getFrontScreenFrameSrc(DESKTOP_BASE_URL, index);
 }
 
 function getMobileFrameSrc(index: number) {
-  const padded = index.toString().padStart(2, '0');
-  const delay = index === 2 ? '0.034s' : '0.033s';
-  return `${MOBILE_BASE_URL}/frame_${padded}_delay-${delay}.webp`;
+  return getFrontScreenFrameSrc(MOBILE_BASE_URL, index);
 }
 
 function getFrameSrc(index: number) {
