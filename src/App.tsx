@@ -145,17 +145,17 @@ const HeroSection = () => (
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.15 }}
-        className="relative z-10 flex flex-col sm:flex-row gap-4 justify-center"
+        className="relative z-10 flex flex-row gap-2 sm:gap-4 justify-center"
       >
         <a
           href="#builds"
-          className="px-8 py-4 bg-brand-600 text-white rounded-full text-lg font-bold hover:bg-brand-700 transition-colors shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2"
+          className="px-4 py-3 sm:px-8 sm:py-4 bg-brand-600 text-white rounded-full text-sm sm:text-lg font-bold hover:bg-brand-700 transition-colors shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
         >
-          Bekijk Builds <ArrowRight size={20} />
+          Bekijk Builds <ArrowRight size={16} className="sm:w-5 sm:h-5" />
         </a>
         <a
           href="#story"
-          className="px-8 py-4 bg-white/10 text-white rounded-full text-lg font-bold hover:bg-white/20 transition-colors"
+          className="px-4 py-3 sm:px-8 sm:py-4 bg-white/10 text-white rounded-full text-sm sm:text-lg font-bold hover:bg-white/20 transition-colors whitespace-nowrap"
         >
           Ons Verhaal
         </a>

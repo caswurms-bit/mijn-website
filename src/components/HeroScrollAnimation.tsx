@@ -201,18 +201,21 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       const imgHeight = img.naturalHeight;
       const isMobile = window.innerWidth < 768;
       const baseRatio = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
-      // Pure cover-gedrag toont de pc te groot/uitgezoomd — op zowel desktop
-      // als mobiel verkleinen we het eindresultaat met dezelfde factor.
-      const scaleAdjustment = 0.6;
+      // Pure cover-gedrag toont de pc te groot/uitgezoomd — op desktop
+      // verkleinen we het eindresultaat, op mobiel nog een fractie extra
+      // (subtiele correctie, desktop-waarde 0.6 blijft ongewijzigd).
+      const scaleAdjustment = isMobile ? 0.56 : 0.6;
       const ratio = baseRatio * scaleAdjustment;
       const newWidth = imgWidth * ratio;
       const newHeight = imgHeight * ratio;
       const x = (canvasWidth - newWidth) / 2;
       const dpr = window.devicePixelRatio || 1;
       // Offsets proportioneel meeschalen zodat de positionering relatief
-      // t.o.v. het kleinere beeld gelijk blijft aan voorheen.
-      const verticalOffset = (isMobile ? 20 * dpr : 40 * dpr) * scaleAdjustment;
-      const horizontalOffset = 16 * dpr * scaleAdjustment;
+      // t.o.v. het kleinere beeld gelijk blijft aan voorheen. Mobiel krijgt
+      // een iets grotere verticalOffset (verder naar beneden) en een iets
+      // kleinere horizontalOffset (verder naar links) — desktop ongewijzigd.
+      const verticalOffset = (isMobile ? 34 * dpr : 40 * dpr) * scaleAdjustment;
+      const horizontalOffset = (isMobile ? 6 * dpr : 16 * dpr) * scaleAdjustment;
       const y = (canvasHeight - newHeight) / 2 + verticalOffset;
 
       context.fillStyle = bgColor.current ?? '#ffffff';
