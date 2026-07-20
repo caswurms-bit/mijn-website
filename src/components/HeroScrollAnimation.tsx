@@ -213,11 +213,12 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       // Offsets proportioneel meeschalen zodat de positionering relatief
       // t.o.v. het kleinere beeld gelijk blijft aan voorheen. Mobiel:
       // verticalOffset ongewijzigd t.o.v. de vorige correctie (94). De
-      // horizontalOffset ging in de vorige stap te ver naar links (6 -> -4
-      // -> -24); nu de helft van díe laatste stap teruggedraaid richting
-      // rechts: -24 + 10 = -14. Desktop blijft ongewijzigd.
+      // horizontalOffset-geschiedenis: 6 -> -4 -> -24 -> -14 (halve
+      // terugdraai) -> nu nog een kleine stap verder naar rechts, vergelijkbaar
+      // in grootte met die laatste correctie (+10): -14 + 10 = -4.
+      // Desktop blijft ongewijzigd.
       const verticalOffset = (isMobile ? 94 * dpr : 40 * dpr) * scaleAdjustment;
-      const horizontalOffset = (isMobile ? -14 * dpr : 16 * dpr) * scaleAdjustment;
+      const horizontalOffset = (isMobile ? -4 * dpr : 16 * dpr) * scaleAdjustment;
       const y = (canvasHeight - newHeight) / 2 + verticalOffset;
 
       context.fillStyle = bgColor.current ?? '#ffffff';
@@ -298,7 +299,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
           ref={canvasRef} 
           className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${isReady ? 'opacity-100' : 'opacity-0'}`} 
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-slate-950/50 to-slate-950/80 md:from-slate-950/20 md:via-slate-950/40 md:to-slate-950/75 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/35 to-slate-950/65 md:from-slate-950/12 md:via-slate-950/28 md:to-slate-950/60 z-10" />
       </div>
       <div className="relative z-10 -mt-[100vh] min-h-screen w-full flex items-center justify-center">
         {children}

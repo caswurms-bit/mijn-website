@@ -242,19 +242,20 @@ const FeaturesSection = () => (
 const BuildCard = ({
   build,
   idx,
+  color,
   onOpenBuild,
   onAddToCart,
   onRequestBuild,
 }: {
   build: any;
   idx: number;
+  color: 'black' | 'white';
   onOpenBuild: (b: any) => void;
   onAddToCart: (b: any) => void;
   onRequestBuild: (b: any) => void;
 }) => {
   const [added, setAdded] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [color, setColor] = useState<'black' | 'white'>('black');
   // Nieuwe "los product op witte/zwarte achtergrond"-foto's (starter/performance/pro)
   // vs. de oude sfeervolle build-foto's (elite) — bepaalt of we object-contain +
   // witte achtergrond gebruiken i.p.v. object-cover + donkere gradient-overlay.
@@ -311,24 +312,6 @@ const BuildCard = ({
         <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
           {build.target}
         </span>
-        {build.image.white && (
-          <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 z-20 flex items-center gap-1.5">
-            <button
-              onClick={(e) => { e.stopPropagation(); setColor('black'); }}
-              className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-black transition-all duration-200 ${
-                color === 'black' ? 'ring-2 ring-white scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.4)]' : 'ring-1 ring-white/60'
-              }`}
-              aria-label="Zwarte behuizing"
-            />
-            <button
-              onClick={(e) => { e.stopPropagation(); setColor('white'); }}
-              className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white border border-slate-300 transition-all duration-200 ${
-                color === 'white' ? 'ring-2 ring-brand-500 scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.25)]' : 'ring-1 ring-slate-300'
-              }`}
-              aria-label="Witte behuizing"
-            />
-          </div>
-        )}
       </div>
       <div className="p-3 sm:p-6 flex flex-col flex-1">
         <h3 className="text-sm sm:text-xl font-black text-slate-900 mb-1 sm:mb-2">{build.name}</h3>
@@ -402,10 +385,14 @@ const BuildCard = ({
 };
 
 const BuildsSection = ({
+  color,
+  onColorChange,
   onOpenBuild,
   onAddToCart,
   onRequestBuild,
 }: {
+  color: 'black' | 'white';
+  onColorChange: (c: 'black' | 'white') => void;
   onOpenBuild: (b: any) => void;
   onAddToCart: (b: any) => void;
   onRequestBuild: (b: any) => void;
@@ -417,7 +404,7 @@ const BuildsSection = ({
   return (
   <section ref={sectionRef} id="builds" className="py-16 sm:py-24 px-4 sm:px-6 bg-white relative z-20">
     <div className="max-w-7xl mx-auto">
-      <div className="text-center mb-10 sm:mb-16">
+      <div className="text-center mb-8 sm:mb-10">
         <motion.h2 style={{ y: headingY }} className="text-3xl sm:text-5xl font-black text-slate-900 mb-3 sm:mb-4">Onze Builds</motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 12 }}
@@ -427,9 +414,27 @@ const BuildsSection = ({
           className="text-base sm:text-xl text-slate-500"
         >Klik op een build voor alle specs en details.</motion.p>
       </div>
+      <div className="flex items-center justify-center gap-2 mb-8 sm:mb-12">
+        <button
+          onClick={() => onColorChange('black')}
+          className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-full text-sm sm:text-base font-bold transition-colors ${
+            color === 'black' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+          }`}
+        >
+          Zwart
+        </button>
+        <button
+          onClick={() => onColorChange('white')}
+          className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-full text-sm sm:text-base font-bold transition-colors border ${
+            color === 'white' ? 'bg-white text-slate-900 border-slate-900' : 'bg-slate-100 text-slate-500 border-transparent hover:bg-slate-200'
+          }`}
+        >
+          Wit
+        </button>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {BUILDS.map((build, idx) => (
-          <BuildCard key={build.id} build={build} idx={idx} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
+          <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
         ))}
       </div>
     </div>
@@ -587,17 +592,18 @@ const Footer = () => (
 
 const BuildModal = ({
   build,
+  color,
   onClose,
   onAddToCart,
   onRequestBuild,
 }: {
   build: any;
+  color: 'black' | 'white';
   onClose: () => void;
   onAddToCart: (b: any) => void;
   onRequestBuild: (b: any) => void;
 }) => {
   const [added, setAdded] = useState(false);
-  const [color, setColor] = useState<'black' | 'white'>('black');
 
   const handleAdd = () => {
     if (added) return;
@@ -645,24 +651,6 @@ const BuildModal = ({
             <span className="absolute bottom-3 left-3 text-xs font-bold text-white bg-brand-600 px-2.5 py-1 rounded-full sm:hidden">
               {build.target}
             </span>
-            {build.image.white && (
-              <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setColor('black'); }}
-                  className={`w-5 h-5 rounded-full bg-black transition-all duration-200 ${
-                    color === 'black' ? 'ring-2 ring-white scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.4)]' : 'ring-1 ring-white/60'
-                  }`}
-                  aria-label="Zwarte behuizing"
-                />
-                <button
-                  onClick={(e) => { e.stopPropagation(); setColor('white'); }}
-                  className={`w-5 h-5 rounded-full bg-white border border-slate-300 transition-all duration-200 ${
-                    color === 'white' ? 'ring-2 ring-brand-500 scale-110 shadow-[0_2px_6px_rgba(0,0,0,0.25)]' : 'ring-1 ring-slate-300'
-                  }`}
-                  aria-label="Witte behuizing"
-                />
-              </div>
-            )}
           </div>
           {/* Content — rechts op desktop, scroll */}
           <div className="flex-1 flex flex-col min-h-0">
@@ -1000,6 +988,9 @@ export default function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [requestBuild, setRequestBuild] = useState<any>(null);
   const [customBuildOpen, setCustomBuildOpen] = useState(false);
+  // Globale kleurkeuze (zwart/wit) voor de builds-sectie, gedeeld tussen
+  // BuildsSection (de toggle + alle kaarten) en BuildModal.
+  const [buildColor, setBuildColor] = useState<'black' | 'white'>('black');
 
   // Stripe stuurt de klant terug met ?success=true in de URL
   const params = new URLSearchParams(window.location.search);
@@ -1022,13 +1013,13 @@ export default function App() {
       <HeroSection />
       <FeaturesSection />
       <StorySection />
-      <BuildsSection onOpenBuild={setSelectedBuild} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
+      <BuildsSection color={buildColor} onColorChange={setBuildColor} onOpenBuild={setSelectedBuild} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
       <CustomRequestSection onOpen={() => setCustomBuildOpen(true)} />
       <TrustpilotSection />
       <Footer />
       <AnimatePresence>
         {selectedBuild && (
-          <BuildModal build={selectedBuild} onClose={() => setSelectedBuild(null)} onAddToCart={addToCart} onRequestBuild={(b) => { setSelectedBuild(null); setRequestBuild(b); }} />
+          <BuildModal build={selectedBuild} color={buildColor} onClose={() => setSelectedBuild(null)} onAddToCart={addToCart} onRequestBuild={(b) => { setSelectedBuild(null); setRequestBuild(b); }} />
         )}
       </AnimatePresence>
       <AnimatePresence>
