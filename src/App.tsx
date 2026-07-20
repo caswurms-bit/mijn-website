@@ -6,6 +6,7 @@ import CustomBuildModal from './components/CustomBuildModal';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TrustpilotWidget from './components/TrustpilotWidget';
+import { useBodyScrollLock } from './hooks/useBodyScrollLock';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Settings,
@@ -604,6 +605,9 @@ const BuildModal = ({
   onRequestBuild: (b: any) => void;
 }) => {
   const [added, setAdded] = useState(false);
+  // Zolang deze modal gemount is, mag de achtergrondpagina niet scrollen
+  // (iOS Safari negeert overflow:hidden op de body, vandaar de fixed-lock).
+  useBodyScrollLock(Boolean(build));
 
   const handleAdd = () => {
     if (added) return;
@@ -654,7 +658,7 @@ const BuildModal = ({
           </div>
           {/* Content — rechts op desktop, scroll */}
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto p-6 sm:p-7">
+            <div className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-6 sm:p-7">
               <div className="flex items-start justify-between mb-4 sm:mb-3">
                 <div>
                   <h2 className="text-xl sm:text-3xl font-black text-slate-900">{build.name}</h2>
