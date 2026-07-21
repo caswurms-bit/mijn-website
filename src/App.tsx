@@ -34,9 +34,9 @@ const BUILDS = [
     priceNum: 1299,
     target: '1080p High / 1440p Ready',
     shortDesc: 'Perfect voor 1080p gaming.',
-    description: 'RTX 5060 en een snelle Ryzen-processor voor soepel 1080p gamen. Volledig klaar aan huis — drivers en Windows al ingesteld.',
+    description: 'RTX 5060 en een Intel Core i5-14400F voor soepel 1080p gamen. Volledig klaar aan huis — drivers en Windows al ingesteld.',
     specs: [
-      'CPU: Ryzen 7 5700X',
+      'CPU: Intel Core i5-14400F',
       'GPU: RTX 5060',
       'RAM: 16 GB DDR4',
       'Opslag: 1 TB NVMe SSD',
@@ -46,7 +46,7 @@ const BUILDS = [
     warranty: '3 jaar hardwaregarantie op de complete pc.',
     note: 'Volledig geïnstalleerd geleverd — aansluiten en direct gamen.',
     stockStatus: 'in-stock',
-    deliveryText: 'Verzending binnen 2 werkdagen',
+    deliveryText: 'Verzending binnen 3 werkdagen',
     image: {
       black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/product%20foto%20zwart%20.png',
       white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
@@ -63,7 +63,7 @@ const BUILDS = [
     shortDesc: 'De beste prijs/prestatie.',
     description: 'RTX 5060 Ti en 32 GB geheugen voor moeiteloos 1440p gamen, multitasken en streamen. Onze meest gekozen build.',
     specs: [
-      'CPU: Ryzen 7 5700X',
+      'CPU: Intel Core i5-14400F',
       'GPU: RTX 5060 Ti',
       'RAM: 32 GB DDR4',
       'Opslag: 1 TB NVMe SSD',
@@ -73,7 +73,7 @@ const BUILDS = [
     warranty: '3 jaar hardwaregarantie op de complete pc.',
     note: 'Meest gekozen — de beste prijs/prestatie van onze lineup.',
     stockStatus: 'in-stock',
-    deliveryText: 'Verzending binnen 2 werkdagen',
+    deliveryText: 'Verzending binnen 3 werkdagen',
     image: {
       black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/product%20foto%20zwart%20.png',
       white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
@@ -89,7 +89,7 @@ const BUILDS = [
     shortDesc: 'Maximale prestaties voor fanatieke gamers.',
     description: 'RTX 5070 en 32 GB geheugen voor ultra instellingen zonder concessies. Voor wie alles uit zijn monitor wil halen.',
     specs: [
-      'CPU: Ryzen 7 5700X',
+      'CPU: Intel Core i5-14400F',
       'GPU: RTX 5070',
       'RAM: 32 GB DDR4',
       'Opslag: 1 TB NVMe SSD',
@@ -99,7 +99,7 @@ const BUILDS = [
     warranty: '3 jaar hardwaregarantie op de complete pc.',
     note: 'Op aanvraag gebouwd — zelfde kwaliteit en zorgvuldigheid als alle andere builds.',
     stockStatus: 'on-request',
-    deliveryText: 'Wachttijd: 7 werkdagen',
+    deliveryText: 'Verzending binnen 3 werkdagen',
     image: {
       black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/product%20foto%20zwart%20.png',
       white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
@@ -352,8 +352,8 @@ const BuildCard = ({
               onClick={(e) => { e.stopPropagation(); onRequestBuild(build); }}
               className="w-full py-3 bg-amber-500 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
             >
-              <Mail size={16} />
-              Build aanvragen
+              <ShoppingBag size={16} />
+              Bestel direct
             </button>
           )}
 
@@ -394,8 +394,9 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
       onClick={goToSelectedModel}
       className="group cursor-pointer flex flex-col items-center text-center"
     >
-      {/* Foto — blijft hetzelfde ongeacht het gekozen niveau, duidelijk groter dan voorheen */}
-      <div className="w-full h-64 sm:h-96 relative mb-6 sm:mb-8">
+      {/* Foto — blijft hetzelfde ongeacht het gekozen niveau. Groter dan Elite's
+          foto, want Cube Series is de hoofdserie en mag dat visueel uitstralen. */}
+      <div className="w-full h-72 sm:h-[28rem] relative mb-6 sm:mb-8">
         <img
           src={starter.image[color] ?? starter.image.black}
           alt="Easy PiCi Cube Series"
@@ -428,9 +429,9 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
       <a
         href={`/cube-series?model=${selectedModel}`}
         onClick={(e) => e.stopPropagation()}
-        className="mt-6 sm:mt-8 inline-flex items-center gap-2 text-sm sm:text-base font-bold text-brand-600 group-hover:gap-3 transition-all duration-200"
+        className="mt-6 sm:mt-8 inline-flex items-center gap-2 text-base sm:text-lg font-bold text-brand-600 hover:text-brand-700 group-hover:gap-3 transition-all duration-200"
       >
-        Bekijk Cube {build.tier} <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
+        Bekijk Cube {build.tier} <ArrowRight size={18} className="sm:w-5 sm:h-5" />
       </a>
     </motion.div>
   );
@@ -775,7 +776,7 @@ const BuildModal = ({
                   onClick={() => { onClose(); onRequestBuild(build); }}
                   className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
                 >
-                  <Mail size={18} /> Build aanvragen
+                  <ShoppingBag size={18} /> Bestel direct
                 </button>
               )}
               {build.stockStatus === 'unavailable' && (
