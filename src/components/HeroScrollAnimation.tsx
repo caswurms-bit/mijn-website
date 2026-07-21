@@ -26,17 +26,22 @@ function isMobileViewport() {
   return window.innerWidth < 768;
 }
 
-// 'canplaythrough' garandeert alleen dat lineair afspelen vanaf de huidige
-// positie niet meer zou stallen bij het huidige downloadtempo — niet dat het
-// hele (kleine) bestand al binnen is. Scrubben springt juist vrij door de
-// hele tijdlijn heen (ook naar het einde), dus checken we voor de zekerheid
-// zelf of `buffered` al tot (bijna) het einde reikt.
+// Marge t.o.v. de exacte duur waarbinnen we het bestand als "volledig
+// gebufferd" beschouwen — zelden exact gelijk, vandaar een kleine tolerantie.
+const FULLY_BUFFERED_EPSILON = 0.1;
+
+// 'canplaythrough' is slechts een schatting van de browser (genoeg om
+// lineair af te spelen bij het huidige downloadtempo) — geen garantie dat
+// het hele bestand binnen is. In de praktijk vuurde dat te vroeg, met
+// haperend scrubben tot gevolg zodra er alsnog data moest worden opgehaald.
+// Daarom vertrouwen we uitsluitend op een expliciete vergelijking van
+// `buffered` t.o.v. de volledige duur.
 function isFullyBuffered(video: HTMLVideoElement) {
   const duration = video.duration;
   if (!duration || !isFinite(duration)) return false;
   const buffered = video.buffered;
   if (buffered.length === 0) return false;
-  return buffered.end(buffered.length - 1) >= duration - 0.25;
+  return buffered.end(buffered.length - 1) >= duration - FULLY_BUFFERED_EPSILON;
 }
 
 function easeScrollProgress(p: number) {
@@ -192,12 +197,11 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       hasAutoPaused.current = true;
       video.pause();
     };
-    // 'canplaythrough' zegt alleen iets over lineair afspelen vanaf nu, niet
-    // over vrij kunnen scrubben naar elk punt (incl. het einde) — daarom ook
-    // 'progress' blijven volgen tot `buffered` echt tot (bijna) het einde
-    // reikt. Bij een bestand van een paar MB is dat meestal vrijwel meteen
-    // het geval na canplaythrough, maar dit dekt tragere verbindingen af.
-    const handleBufferProgress = () => {
+    // 'progress' vuurt herhaaldelijk terwijl er data binnenkomt — bij elke
+    // update checken of `buffered` inmiddels echt tot (bijna) het einde
+    // reikt (isFullyBuffered). Geen 'canplaythrough' meer als (mede)signaal:
+    // die schatting bleek onbetrouwbaar vroeg te vuren.
+    const handleProgress = () => {
       if (settledScrub) return;
       if (isFullyBuffered(video)) {
         settledScrub = true;
@@ -209,16 +213,14 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('error', handleError);
     video.addEventListener('playing', handlePlaying);
-    video.addEventListener('canplaythrough', handleBufferProgress);
-    video.addEventListener('progress', handleBufferProgress);
+    video.addEventListener('progress', handleProgress);
 
     // Kan al geladen zijn (bv. uit browsercache) vóórdat dit effect draait.
     if (video.readyState >= video.HAVE_METADATA) handleLoadedMetadata();
     if (video.readyState >= video.HAVE_CURRENT_DATA) handleLoadedData();
-    if (video.readyState >= video.HAVE_ENOUGH_DATA) handleBufferProgress();
+    handleProgress();
 
-    // Vangnet, in twee delen — werkt ook als canplaythrough/progress nooit
-    // (voldoende) vuren:
+    // Vangnet, in twee delen — werkt ook als 'progress' nooit voldoende vuurt:
     // - geen 'loadeddata' én geen 'error' binnen LOAD_TIMEOUT_MS: val terug
     //   op de donkere achtergrond i.p.v. voor altijd onzichtbaar blijven;
     // - wél geladen maar nooit volledig gebufferd bevestigd: geef scrubben
@@ -240,8 +242,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('error', handleError);
       video.removeEventListener('playing', handlePlaying);
-      video.removeEventListener('canplaythrough', handleBufferProgress);
-      video.removeEventListener('progress', handleBufferProgress);
+      video.removeEventListener('progress', handleProgress);
       window.clearTimeout(timeoutId);
     };
   }, []);
