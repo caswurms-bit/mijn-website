@@ -5,6 +5,7 @@ import RequestBuildModal from './components/RequestBuildModal';
 import CustomBuildModal from './components/CustomBuildModal';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import CubeSeriesPage from './pages/CubeSeriesPage';
 import TrustpilotWidget from './components/TrustpilotWidget';
 import { useBodyScrollLock } from './hooks/useBodyScrollLock';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
@@ -406,6 +407,54 @@ const BuildCard = ({
   );
 };
 
+// Eén overzichtstegel voor de hele Cube Series (Starter/Performance/Pro delen
+// dezelfde behuizing) — verwijst naar de eigen productpagina met segmented
+// control i.p.v. de BuildModal te openen voor één specifiek niveau.
+const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
+  const [touched, setTouched] = useState(false);
+  const starter = BUILDS.find((b) => b.id === 'starter')!;
+
+  return (
+    <motion.a
+      href="/cube-series"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      onTouchStart={() => setTouched(true)}
+      onTouchEnd={() => setTimeout(() => setTouched(false), 350)}
+      className={`group cursor-pointer bg-white rounded-2xl sm:rounded-3xl overflow-hidden border transition-[transform,border-color,box-shadow] duration-300 flex flex-col
+        ${touched
+          ? 'border-brand-200 shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] -translate-y-1'
+          : 'border-slate-100 hover:border-brand-200 hover:shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] hover:-translate-y-1'
+        }`}
+    >
+      <div className="h-40 sm:h-56 overflow-hidden relative bg-white">
+        <img
+          src={starter.image[color] ?? starter.image.black}
+          alt="Easy PiCi Cube Series"
+          className="w-full h-full object-contain p-6 sm:p-8"
+        />
+        <span className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 text-[10px] sm:text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
+          3 modellen
+        </span>
+      </div>
+      <div className="p-4 sm:p-6 flex flex-col flex-1">
+        <h3 className="text-base sm:text-2xl font-black text-slate-900 mb-1 sm:mb-1.5">Cube Series</h3>
+        <p className="text-xs sm:text-sm font-semibold text-slate-500 mb-2 sm:mb-3">Starter · Performance · Pro</p>
+        <p className="text-xs sm:text-sm text-slate-500 mb-4 sm:mb-6 flex-1 leading-relaxed">
+          Dezelfde premium behuizing, drie prestatieniveaus. Kies de build die bij jouw budget en games past.
+        </p>
+        <div className="mt-auto space-y-3">
+          <span className="text-base sm:text-2xl font-black text-brand-600">Vanaf {starter.price}</span>
+          <div className="w-full py-2.5 sm:py-3 bg-brand-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-base font-bold group-hover:bg-brand-700 transition-colors flex items-center justify-center gap-1.5 sm:gap-2">
+            Kies je model <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
+          </div>
+        </div>
+      </div>
+    </motion.a>
+  );
+};
+
 const BuildsSection = ({
   color,
   onColorChange,
@@ -454,39 +503,9 @@ const BuildsSection = ({
           Wit
         </button>
       </div>
-      {/* Cube Series — starter/performance/pro delen dezelfde behuizing */}
-      <div className="mb-12 sm:mb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-5 sm:mb-8"
-        >
-          <h3 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1.5 sm:mb-2">Cube Series</h3>
-          <p className="text-sm sm:text-base text-slate-500 max-w-xl">
-            Dezelfde premium behuizing, drie prestatieniveaus. Kies de build die bij jouw budget en games past.
-          </p>
-        </motion.div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {BUILDS.filter((build) => build.id !== 'elite').map((build, idx) => (
-            <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
-          ))}
-        </div>
-      </div>
-
-      {/* Elite Series — losse, brede premium kaart i.p.v. een klein vierde kaartje */}
-      <div>
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-5 sm:mb-8"
-        >
-          <h3 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1.5 sm:mb-2">Elite Series</h3>
-          <p className="text-sm sm:text-base text-slate-500 max-w-xl">
-            Onze ultieme high-end build voor maximale prestaties.
-          </p>
-        </motion.div>
+      {/* Twee hoofdproducten: Cube Series (eigen productpagina) en Elite Series */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <CubeSeriesOverviewCard color={color} />
         {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
           <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
         ))}
@@ -1063,6 +1082,35 @@ export default function App() {
 
   const addToCart = (build: any) => setCart((prev) => [...prev, build]);
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
+
+  // Cube Series heeft een eigen productpagina met segmented control
+  // (?model=starter|performance|pro), maar deelt cart/checkout/aanvraag
+  // met de rest van de site — vandaar dezelfde Navbar/Footer/modals shell.
+  if (pathname === '/cube-series') {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar cartCount={cart.length} onOpenCart={() => setCartOpen(true)} />
+        <CubeSeriesPage builds={BUILDS} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
+        <Footer />
+        <AnimatePresence>
+          {cartOpen && (
+            <CartModal
+              cart={cart}
+              onClose={() => setCartOpen(false)}
+              onRemove={removeFromCart}
+              onCheckout={() => { setCartOpen(false); setCheckoutOpen(true); }}
+            />
+          )}
+        </AnimatePresence>
+        {checkoutOpen && (
+          <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+        )}
+        {requestBuild && (
+          <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950">
