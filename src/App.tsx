@@ -467,16 +467,14 @@ const BuildsSection = ({
             Dezelfde premium behuizing, drie prestatieniveaus. Kies de build die bij jouw budget en games past.
           </p>
         </motion.div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {BUILDS.filter((build) => build.id !== 'elite').map((build, idx) => (
-            <div key={build.id} className={idx === 2 ? 'col-span-2 lg:col-span-1' : ''}>
-              <BuildCard build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
-            </div>
+            <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
           ))}
         </div>
       </div>
 
-      {/* Elite Series — losse premium build met eigen foto */}
+      {/* Elite Series — losse, brede premium kaart i.p.v. een klein vierde kaartje */}
       <div>
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -489,11 +487,9 @@ const BuildsSection = ({
             Onze ultieme high-end build voor maximale prestaties.
           </p>
         </motion.div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-          {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
-            <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
-          ))}
-        </div>
+        {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
+          <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
+        ))}
       </div>
     </div>
   </section>
