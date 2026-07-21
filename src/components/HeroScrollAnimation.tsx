@@ -158,8 +158,14 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     // sprong — bij de gelijkmatige, continue input van een trackpad blijft
     // de extra laag nagenoeg onmerkbaar, omdat er dan nooit een echte
     // "sprong" is om te dempen.
-    const inputSmoothingFactor = 0.06;
-    const glideFactor = 0.06;
+    //
+    // TIJDELIJK, bewust extreem gezet (0.06 -> 0.01) om te bevestigen dat dit
+    // de juiste knop is voor het Windows-muiswiel-probleem: één scroll-tick
+    // mag nu nog maar een piepklein stukje vooruit — daarna weer terugschalen
+    // naar een subtielere waarde. glideFactor is licht verlaagd (algemene
+    // smoothing), niet drastisch, en werkt op beide input-methoden gelijk.
+    const inputSmoothingFactor = 0.01;
+    const glideFactor = 0.05;
 
     const inputDiff = targetProgress.current - smoothedTargetProgress.current;
     smoothedTargetProgress.current += inputDiff * inputSmoothingFactor;
