@@ -41,9 +41,11 @@ const SEEK_MIN_DELTA = 0.01;
 const WHEEL_MAX_DELTA = 40;
 // Hoeveel van de opgehoopte wheel-delta (pendingWheelDelta) er per
 // animatieframe wordt verwerkt — losgekoppeld van hoeveel wheel-events er
-// binnenkomen. Een burst van tien synthetische sub-events wordt zo over
-// meerdere frames uitgesmeerd i.p.v. in één keer verwerkt.
-const MAX_DELTA_PER_FRAME = 10;
+// binnenkomen. Bij 10 werd een geclampte 40px-delta al in 4 frames (~65ms
+// bij 60fps) weggewerkt — te kort om als vloeiend te voelen, oogde nog als
+// een korte sprong. Bij 2 smeert diezelfde 40px uit over ~20 frames
+// (~330ms), wat als een duidelijk vloeiende glijbeweging aanvoelt.
+const MAX_DELTA_PER_FRAME = 2;
 
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
