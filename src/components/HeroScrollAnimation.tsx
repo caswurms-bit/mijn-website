@@ -1,7 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+// MP4 (H.264) i.p.v. WebM — Safari (iOS/macOS) ondersteunt WebM niet
+// betrouwbaar, waardoor de video daar nooit laadde en de hero onzichtbaar
+// bleef. MP4 wordt overal ondersteund, dus één bron volstaat. 60fps met
+// keyframe-interval 1 (elk frame is een keyframe) voor soepel scrubben.
 const HERO_VIDEO_SRC =
-  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/web%20heropage/eindelijkklaarpc-ezgif.com-video-to-webm-converter-2.webm';
+  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/web%20heropage/60%20pfs%20pc.mp4';
+
+// Valt terug op de donkere achtergrond (zonder video) als 'loadeddata' niet
+// binnen deze tijd vuurt en er ook geen 'error' is opgetreden — voorkomt dat
+// de hero voor altijd onzichtbaar blijft bij een laadprobleem dat geen
+// duidelijke 'error' oplevert (bv. trage verbinding, ontbrekende bron).
+const LOAD_TIMEOUT_MS = 8000;
 
 // Kleine marge t.o.v. de exacte duur — sommige browsers seeken niet
 // betrouwbaar naar precies `duration`, vlak ervoor werkt altijd en is
@@ -125,14 +135,18 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     const video = videoRef.current;
     if (!video) return;
 
+    let settled = false;
+
     const handleLoadedMetadata = () => {
       durationRef.current = video.duration || 0;
       applyVideoTransform();
     };
     const handleLoadedData = () => {
+      settled = true;
       setIsReady(true);
     };
     const handleError = () => {
+      settled = true;
       setHasError(true);
       setIsReady(true);
     };
@@ -145,10 +159,21 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     if (video.readyState >= video.HAVE_METADATA) handleLoadedMetadata();
     if (video.readyState >= video.HAVE_CURRENT_DATA) handleLoadedData();
 
+    // Vangnet: geen 'loadeddata' én geen 'error' binnen LOAD_TIMEOUT_MS (bv.
+    // trage verbinding of een bron die stil blijft hangen) — val alsnog
+    // terug op de donkere achtergrond i.p.v. voor altijd onzichtbaar blijven.
+    const timeoutId = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      setHasError(true);
+      setIsReady(true);
+    }, LOAD_TIMEOUT_MS);
+
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('error', handleError);
+      window.clearTimeout(timeoutId);
     };
   }, []);
 
