@@ -203,7 +203,15 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     if (!sectionRef.current || !canScrub) return;
     const rect = sectionRef.current.getBoundingClientRect();
     const scrollDistance = window.innerHeight * 0.8; // zelfde afstand als in handleScroll
-    const inZone = rect.top <= 0 && rect.top >= -scrollDistance;
+    // Kleine marge (één WHEEL_MAX_DELTA breed) aan weerszijden van de exacte
+    // pinned-grenzen: zonder deze marge werd precies de tik die van buiten
+    // naar binnen de zone beweegt (of, andersom, weer terug naar binnen na
+    // het verlaten) helemaal niet onderschept — die tik mocht dan nog vrij,
+    // ongeclampt native scrollen. Op Windows bleek dat geen zeldzame
+    // eenmalige entree te zijn: elke nieuwe wheel-tik begint net buiten de
+    // strikte grens en raakte zo telkens opnieuw dit onbeschermde randgeval,
+    // wat de sprongsgewijze (~33%/~66%) voortgang veroorzaakte.
+    const inZone = rect.top <= WHEEL_MAX_DELTA && rect.top >= -scrollDistance - WHEEL_MAX_DELTA;
     if (!inZone) return;
 
     const currentRawProgress = Math.min(1, Math.max(0, -rect.top / scrollDistance));
@@ -228,8 +236,13 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     // eigen, mogelijk veel grotere, delta te laten toepassen) zodat de
     // zichtbare scrollpositie gelijke tred houdt met deze genormaliseerde
     // progress — rect.top (en dus handleScroll) blijft hierdoor vanzelf
-    // consistent met kleine stapjes i.p.v. grote sprongen.
-    window.scrollBy(0, clampedDelta);
+    // consistent met kleine stapjes i.p.v. grote sprongen. Expliciet
+    // behavior: 'auto' (instant) i.p.v. de browser-default, zodat een
+    // eventuele CSS scroll-behavior: smooth ergens anders op de pagina onze
+    // eigen, al gedempte stap niet nog eens over een animatieduur uitsmeert
+    // — dat zou rect.top-metingen laten achterlopen op de werkelijke
+    // positie en zo een te lang aanvoelende scrollafstand veroorzaken.
+    window.scrollBy({ top: clampedDelta, left: 0, behavior: 'auto' });
   };
 
   const handleResize = () => {
