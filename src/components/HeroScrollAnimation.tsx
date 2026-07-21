@@ -8,6 +8,20 @@ import React, { useEffect, useRef, useState } from 'react';
 const HERO_VIDEO_SRC =
   'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/24fps%20front%20page/24%20fps%20pc%20.mp4';
 
+// Hoeveel schermhoogtes aan scroll nodig zijn om de animatie te doorlopen
+// (was 0.8 — te weinig voor Windows-muizen met hun grote scroll-sprongen
+// per wiel-klik, zie handleScroll). De sticky video (h-screen, 100vh) blijft
+// gepind zolang de sectie zelf nog niet helemaal voorbij is gescrold; de
+// benodigde scrollafstand (SCROLL_DISTANCE_MULTIPLIER * 100vh) moet dus
+// passen binnen sectiehoogte - 100vh, anders bereikt de animatie progress
+// 1.0 pas NADAT de video al losgekomen is van de sticky-positionering en
+// wegscrolt. Vandaar de gekoppelde <section>/spacer-hoogtes hieronder:
+//   sectiehoogte  = 100 * (SCROLL_DISTANCE_MULTIPLIER + 1) vh
+//   spacer-hoogte = 100 * SCROLL_DISTANCE_MULTIPLIER vh
+// Bij 2 dus 300vh / 200vh. Voelt dit op Mac/trackpad juist te traag, verlaag
+// dan naar 1.5 (en de sectie/spacer navenant naar 250vh / 150vh).
+const SCROLL_DISTANCE_MULTIPLIER = 2;
+
 // Valt terug op de donkere achtergrond (zonder video) als 'loadeddata' niet
 // binnen deze tijd vuurt en er ook geen 'error' is opgetreden — voorkomt dat
 // de hero voor altijd onzichtbaar blijft bij een laadprobleem dat geen
@@ -157,7 +171,15 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   const handleScroll = () => {
     if (!sectionRef.current || !canScrub) return;
     const rect = sectionRef.current.getBoundingClientRect();
-    let rawProgress = -rect.top / (window.innerHeight * 0.8);
+    // Windows-muizen scrollen in veel grotere pixel-sprongen per wiel-klik dan
+    // een Mac-trackpad (die soepel/incrementeel scrollt) — met de vorige 0.8
+    // schoot de animatie op Windows binnen één scroll bijna direct door.
+    // Deze factor (2x schermhoogte i.p.v. 0.8x) vereist meer totale
+    // scrollafstand, waardoor een individuele scroll-sprong (van welke
+    // grootte dan ook) relatief een kleiner deel van het geheel wordt —
+    // trager en consistenter op alle input-methoden, zonder OS-detectie.
+    // Bijpassende sectiehoogte: zie SCROLL_DISTANCE_MULTIPLIER hieronder.
+    let rawProgress = -rect.top / (window.innerHeight * SCROLL_DISTANCE_MULTIPLIER);
     rawProgress = Math.min(1, Math.max(0, rawProgress));
     targetProgress.current = easeScrollProgress(rawProgress);
     if (animationFrameId.current === null) {
@@ -297,7 +319,10 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   }, [canScrub]);
 
   return (
-    <section ref={sectionRef} className="relative h-[160vh] bg-slate-950">
+    // Sectie-/spacerhoogte hieronder moeten in sync blijven met
+    // SCROLL_DISTANCE_MULTIPLIER hierboven (zie uitleg daar): bij 2 is dat
+    // 300vh / 200vh.
+    <section ref={sectionRef} className="relative h-[300vh] bg-slate-950">
       <div className="sticky top-0 h-screen w-full overflow-hidden z-0">
         <div
           ref={containerRef}
@@ -326,7 +351,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       <div className="relative z-10 -mt-[100vh] min-h-screen w-full flex items-center justify-center">
         {children}
       </div>
-      <div className="h-[60vh]" />
+      <div className="h-[200vh]" />
     </section>
   );
 };
