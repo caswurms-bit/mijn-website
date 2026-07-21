@@ -29,11 +29,21 @@ const SEEK_END_EPSILON = 0.05;
 // voorkomt overbodige seeks (en dus werk) bij subpixel scroll-updates.
 const SEEK_MIN_DELTA = 0.01;
 
-// Maximale |deltaY| (in px) die één 'wheel'-event mag bijdragen aan de
-// progress — zie handleWheel. Normaliseert een grote, native Windows-
-// muiswiel-sprong naar dezelfde stapgrootte als een kleine trackpad-tik,
-// ongeacht hoe groot de native delta was.
+// Veiligheidsgrens op wat één los 'wheel'-event aan pendingWheelDelta mag
+// toevoegen (zie handleWheel) — voorkomt dat één extreem grote, losse delta
+// de wachtrij in één klap volpompt. De eigenlijke normalisatie van de
+// scrollsnelheid gebeurt niet meer per event maar per tijd, zie
+// MAX_DELTA_PER_FRAME: Chrome/Edge genereert bij één fysieke scrollwiel-klik
+// een reeks synthetische wheel-events achter elkaar (eigen smooth-scroll-
+// simulatie) — elk event bleef al onder deze grens, maar de SOM van zo'n
+// hele reeks (die binnen een fractie van een seconde binnenkomt, vóór er
+// een animatieframe getekend wordt) was alsnog groot.
 const WHEEL_MAX_DELTA = 40;
+// Hoeveel van de opgehoopte wheel-delta (pendingWheelDelta) er per
+// animatieframe wordt verwerkt — losgekoppeld van hoeveel wheel-events er
+// binnenkomen. Een burst van tien synthetische sub-events wordt zo over
+// meerdere frames uitgesmeerd i.p.v. in één keer verwerkt.
+const MAX_DELTA_PER_FRAME = 10;
 
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
@@ -96,6 +106,9 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   const targetProgress = useRef(0);
   const currentProgress = useRef(0);
   const animationFrameId = useRef<number | null>(null);
+  // Opgehoopte, nog niet verwerkte wheel-delta (px) — handleWheel telt hier
+  // alleen bij op, animate() verwerkt er per frame een vast maximum vanaf.
+  const pendingWheelDelta = useRef(0);
   // iOS Safari decodeert/toont geen enkel videoframe totdat de video echt
   // een keer heeft gespeeld, ook al zijn metadata/loadeddata al gevuurd —
   // vandaar autoplay (mag: muted + playsInline) gevolgd door een meteen
@@ -148,6 +161,37 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   };
 
   const animate = () => {
+    // Verwerk een vast maximum uit de opgehoopte wheel-delta per frame —
+    // losgekoppeld van hoeveel wheel-events er binnenkwamen. Chrome/Edge
+    // genereert bij één fysieke scrollwiel-klik een reeks synthetische
+    // wheel-events achter elkaar (eigen smooth-scroll-simulatie); elk event
+    // bleef al onder WHEEL_MAX_DELTA, maar de SOM van zo'n hele reeks (die
+    // binnen een fractie van een seconde binnenkomt, vóór er een
+    // animatieframe getekend wordt) was alsnog groot. Door hier per frame
+    // slechts MAX_DELTA_PER_FRAME te verwerken en de rest te laten staan
+    // voor volgende frame(s), wordt een grote burst geleidelijk uitgesmeerd.
+    if (pendingWheelDelta.current !== 0) {
+      const sign = Math.sign(pendingWheelDelta.current);
+      const stepDelta = Math.min(Math.abs(pendingWheelDelta.current), MAX_DELTA_PER_FRAME) * sign;
+      pendingWheelDelta.current -= stepDelta;
+
+      const rect = sectionRef.current?.getBoundingClientRect();
+      if (rect) {
+        const scrollDistance = window.innerHeight * 0.8; // zelfde afstand als in handleScroll
+        const currentRawProgress = Math.min(1, Math.max(0, -rect.top / scrollDistance));
+        const nextRawProgress = Math.min(1, Math.max(0, currentRawProgress + stepDelta / scrollDistance));
+        targetProgress.current = easeScrollProgress(nextRawProgress);
+        // TIJDELIJK: debug-logging.
+        console.log(
+          '[animate] stepDelta:', stepDelta,
+          'pendingWheelDelta na verwerking:', pendingWheelDelta.current,
+          'currentRawProgress:', currentRawProgress,
+          'nextRawProgress:', nextRawProgress
+        );
+        window.scrollBy({ top: stepDelta, left: 0, behavior: 'auto' });
+      }
+    }
+
     // Onderscheid tussen kleine, continue scroll-updates (Mac-trackpad) en
     // een enkele grote sprong (Windows-muiswiel-tick), puur op basis van hoe
     // ver currentProgress nog achterloopt op targetProgress — niet via een
@@ -171,7 +215,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
     seekTo(currentProgress.current);
 
-    if (Math.abs(diff) > 0.0001) {
+    if (Math.abs(diff) > 0.0001 || pendingWheelDelta.current !== 0) {
       animationFrameId.current = requestAnimationFrame(animate);
     } else {
       animationFrameId.current = null;
@@ -229,33 +273,23 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
     e.preventDefault();
 
-    const clampedDelta = Math.min(Math.abs(e.deltaY), WHEEL_MAX_DELTA) * Math.sign(e.deltaY);
-    const nextRawProgress = Math.min(1, Math.max(0, currentRawProgress + clampedDelta / scrollDistance));
+    // Accumuleren i.p.v. meteen verwerken: bij een burst synthetische
+    // sub-events (zie animate() hierboven) tellen we hier alleen op, en
+    // animate() trekt er per frame een vast maximum vanaf — losgekoppeld
+    // van hoeveel losse wheel-events er in die burst zaten.
+    const cappedDelta = Math.min(Math.abs(e.deltaY), WHEEL_MAX_DELTA) * Math.sign(e.deltaY);
+    pendingWheelDelta.current += cappedDelta;
 
     // TIJDELIJK: debug-logging.
     console.log(
       '[handleWheel] deltaY:', e.deltaY,
-      'currentRawProgress:', currentRawProgress,
-      'clampedDelta:', clampedDelta,
-      'nextRawProgress:', nextRawProgress
+      'cappedDelta:', cappedDelta,
+      'pendingWheelDelta na optellen:', pendingWheelDelta.current
     );
 
-    targetProgress.current = easeScrollProgress(nextRawProgress);
     if (animationFrameId.current === null) {
       animationFrameId.current = requestAnimationFrame(animate);
     }
-
-    // Stuur de daadwerkelijke paginascroll zelf aan (i.p.v. de browser zijn
-    // eigen, mogelijk veel grotere, delta te laten toepassen) zodat de
-    // zichtbare scrollpositie gelijke tred houdt met deze genormaliseerde
-    // progress — rect.top (en dus handleScroll) blijft hierdoor vanzelf
-    // consistent met kleine stapjes i.p.v. grote sprongen. Expliciet
-    // behavior: 'auto' (instant) i.p.v. de browser-default, zodat een
-    // eventuele CSS scroll-behavior: smooth ergens anders op de pagina onze
-    // eigen, al gedempte stap niet nog eens over een animatieduur uitsmeert
-    // — dat zou rect.top-metingen laten achterlopen op de werkelijke
-    // positie en zo een te lang aanvoelende scrollafstand veroorzaken.
-    window.scrollBy({ top: clampedDelta, left: 0, behavior: 'auto' });
   };
 
   const handleResize = () => {
