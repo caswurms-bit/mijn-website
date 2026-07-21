@@ -6,7 +6,7 @@ import CustomBuildModal from './components/CustomBuildModal';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import CubeSeriesPage from './pages/CubeSeriesPage';
-import CubeModelSelector, { type CubeModel, getSpecValue } from './components/CubeModelSelector';
+import CubeModelSelector, { type CubeModel } from './components/CubeModelSelector';
 import TrustpilotWidget from './components/TrustpilotWidget';
 import { useBodyScrollLock } from './hooks/useBodyScrollLock';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
@@ -30,12 +30,11 @@ const BUILDS = [
     id: 'starter',
     name: 'Easy PiCi Starter',
     tier: 'Starter',
-    quickSpec: 'RTX 5060 • 16 GB • 1080p High',
     price: '€ 1.299',
     priceNum: 1299,
     target: '1080p High / 1440p Ready',
-    shortDesc: 'Serieus gamen zonder te veel te betalen. Sterk op 1080p, klaar voor gebruik.',
-    description: 'De Starter is voor wie gewoon wil gamen zonder gedoe. RTX 5060, snelle Ryzen processor en een NVMe SSD zodat alles direct snel opstart. De pc komt volledig klaar aan: drivers geïnstalleerd, Windows bijgewerkt, alles ingesteld. Aansluiten, aanzetten en gamen.',
+    shortDesc: 'Perfect voor 1080p gaming.',
+    description: 'RTX 5060 en een snelle Ryzen-processor voor soepel 1080p gamen. Volledig klaar aan huis — drivers en Windows al ingesteld.',
     specs: [
       'CPU: Ryzen 7 5700X',
       'GPU: RTX 5060',
@@ -57,13 +56,12 @@ const BUILDS = [
     id: 'performance',
     name: 'Easy PiCi Performance',
     tier: 'Performance',
-    quickSpec: 'RTX 5060 Ti • 32 GB • 1440p High',
     price: '€ 1.499',
     priceNum: 1499,
     target: '1440p High Gaming',
     badge: 'Meest gekozen',
-    shortDesc: 'Beste prijs/prestatie van onze lineup. 1440p gaming, 32 GB geheugen, jarenlang mee.',
-    description: 'Dit is de build die ik zelf zou kiezen. RTX 5060 Ti en 32 GB geheugen — daarmee speel je zware games soepel op 1440p en heb je genoeg ruimte voor multitasking en streaming. Stabiel, stil, en gebouwd om jarenlang mee te gaan. Ook deze pc komt volledig klaar aan, geen installatiegedoe.',
+    shortDesc: 'De beste prijs/prestatie.',
+    description: 'RTX 5060 Ti en 32 GB geheugen voor moeiteloos 1440p gamen, multitasken en streamen. Onze meest gekozen build.',
     specs: [
       'CPU: Ryzen 7 5700X',
       'GPU: RTX 5060 Ti',
@@ -85,12 +83,11 @@ const BUILDS = [
     id: 'pro',
     name: 'Easy PiCi Pro',
     tier: 'Pro',
-    quickSpec: 'RTX 5070 • 32 GB • 1440p Ultra',
     price: '€ 1.699',
     priceNum: 1699,
     target: 'Ultra Gaming Performance',
-    shortDesc: 'Voor wie echt op ultra wil spelen. RTX 5070, strak afgebouwd en klaar voor hoge refresh rates.',
-    description: 'De Pro is voor gamers die écht alles uit hun monitor willen halen. Met een RTX 5070 en 32 GB geheugen speel je zware games op ultra instellingen zonder concessies. De 240mm AIO waterkoeling is bewust gekozen — niet alleen voor de temperaturen, maar ook voor het eindresultaat van de build. Het kost iets meer, maar je ziet en voelt het verschil.',
+    shortDesc: 'Maximale prestaties voor fanatieke gamers.',
+    description: 'RTX 5070 en 32 GB geheugen voor ultra instellingen zonder concessies. Voor wie alles uit zijn monitor wil halen.',
     specs: [
       'CPU: Ryzen 7 5700X',
       'GPU: RTX 5070',
@@ -112,7 +109,6 @@ const BUILDS = [
     id: 'elite',
     name: 'Easy PiCi Elite',
     tier: 'Elite',
-    quickSpec: 'RTX 5070 Ti • 32 GB • 4K Ultra',
     price: '€ 2.500',
     priceNum: 2500,
     target: 'High-End Gaming & Creatie',
@@ -266,7 +262,6 @@ const BuildCard = ({
   onRequestBuild: (b: any) => void;
 }) => {
   const [added, setAdded] = useState(false);
-  const [touched, setTouched] = useState(false);
   // Nieuwe "los product op witte/zwarte achtergrond"-foto's (starter/performance/pro)
   // vs. de oude sfeervolle build-foto's (elite) — bepaalt of we object-contain +
   // witte achtergrond gebruiken i.p.v. object-cover + donkere gradient-overlay.
@@ -280,9 +275,6 @@ const BuildCard = ({
     setTimeout(() => setAdded(false), 1800);
   };
 
-  const handleTouchStart = () => setTouched(true);
-  const handleTouchEnd = () => setTimeout(() => setTouched(false), 350);
-
   return (
     <motion.div
       key={build.id}
@@ -291,15 +283,9 @@ const BuildCard = ({
       viewport={{ once: true }}
       transition={{ delay: idx * 0.1 }}
       onClick={() => onOpenBuild(build)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      className={`group cursor-pointer bg-white rounded-2xl sm:rounded-3xl overflow-hidden border transition-[transform,border-color,box-shadow] duration-300 flex flex-col
-        ${touched
-          ? 'border-brand-200 shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] -translate-y-1'
-          : 'border-slate-100 hover:border-brand-200 hover:shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] hover:-translate-y-1'
-        }`}
+      className="group cursor-pointer flex flex-col"
     >
-      <div className={`h-32 sm:h-48 overflow-hidden relative ${isProductPhoto ? 'bg-white' : ''}`}>
+      <div className={`h-64 sm:h-96 overflow-hidden relative rounded-2xl sm:rounded-3xl ${isProductPhoto ? 'bg-white' : ''}`}>
         {!isProductPhoto && (
           <>
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 sm:hidden" />
@@ -311,50 +297,31 @@ const BuildCard = ({
           alt={build.name}
           className={
             isProductPhoto
-              ? 'w-full h-full object-contain p-4 sm:p-6'
+              ? 'w-full h-full object-contain p-6 sm:p-10'
               : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
           }
         />
         {build.badge && (
-          <span className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.25)]">
+          <span className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.25)]">
             ⭐ {build.badge}
           </span>
         )}
-        <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
+        <span className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
           {build.target}
         </span>
       </div>
-      <div className="p-3 sm:p-6 flex flex-col flex-1">
-        <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 sm:gap-x-1.5 mb-1 sm:mb-1.5">
-          <span className={`text-[9px] sm:text-xs font-bold uppercase tracking-wider ${
-            build.id === 'performance' ? 'text-brand-600' : 'text-slate-400'
-          }`}>
-            {build.tier}
-          </span>
-          {build.id === 'performance' && (
-            <span className="text-[9px] sm:text-xs font-bold text-brand-600">⭐ Aanbevolen</span>
-          )}
-        </div>
-        <h3 className="text-sm sm:text-xl font-black text-slate-900 mb-1 sm:mb-1.5">{build.name}</h3>
-        <p className="text-[10px] sm:text-sm font-semibold text-slate-500 mb-1.5 sm:mb-2">
-          {build.quickSpec}
-        </p>
-        <p className="text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4 flex-1 leading-relaxed line-clamp-2">
+      <div className="pt-5 sm:pt-7 flex flex-col flex-1">
+        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
+          build.id === 'performance' ? 'text-brand-600' : 'text-slate-400'
+        }`}>
+          {build.tier}
+        </span>
+        <h3 className="text-lg sm:text-2xl font-black text-slate-900 mt-1 mb-1.5 sm:mb-2 tracking-tight">{build.name}</h3>
+        <p className="text-sm text-slate-500 mb-4 sm:mb-6 flex-1 leading-relaxed line-clamp-2">
           {build.shortDesc}
         </p>
-        <div className="mt-auto space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-base sm:text-2xl font-black text-brand-600">{build.price}</span>
-          </div>
-
-          {/* Levertijd badge */}
-          <p className="text-[10px] sm:text-xs text-slate-400 flex items-center gap-1">
-            <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
-              build.stockStatus === 'in-stock' ? 'bg-green-500' :
-              build.stockStatus === 'on-request' ? 'bg-amber-400' : 'bg-slate-300'
-            }`} />
-            {build.deliveryText}
-          </p>
+        <div className="mt-auto space-y-3">
+          <span className="block text-xl sm:text-2xl font-black text-brand-600">{build.price}</span>
 
           {/* CTA knop — afhankelijk van stockStatus */}
           {build.stockStatus === 'in-stock' && (
@@ -362,17 +329,17 @@ const BuildCard = ({
               onClick={handleAdd}
               animate={added ? { backgroundColor: '#16a34a' } : { backgroundColor: '' }}
               transition={{ duration: 0.2 }}
-              className="w-full py-2 sm:py-3 bg-brand-600 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 overflow-hidden"
+              className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 overflow-hidden"
             >
               <AnimatePresence mode="wait" initial={false}>
                 {added ? (
-                  <motion.span key="added" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-1 sm:gap-2">
-                    <CheckCircle2 size={14} className="sm:w-[18px] sm:h-[18px]" />
+                  <motion.span key="added" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
+                    <CheckCircle2 size={16} />
                     Toegevoegd!
                   </motion.span>
                 ) : (
-                  <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-1 sm:gap-2">
-                    <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
+                  <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
+                    <ShoppingBag size={16} />
                     Bestel direct
                   </motion.span>
                 )}
@@ -383,9 +350,9 @@ const BuildCard = ({
           {build.stockStatus === 'on-request' && (
             <button
               onClick={(e) => { e.stopPropagation(); onRequestBuild(build); }}
-              className="w-full py-2 sm:py-3 bg-amber-500 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-base font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-1 sm:gap-2"
+              className="w-full py-3 bg-amber-500 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
             >
-              <Mail size={14} className="sm:w-[18px] sm:h-[18px]" />
+              <Mail size={16} />
               Build aanvragen
             </button>
           )}
@@ -393,15 +360,11 @@ const BuildCard = ({
           {build.stockStatus === 'unavailable' && (
             <button
               disabled
-              className="w-full py-2 sm:py-3 bg-slate-100 text-slate-400 rounded-lg sm:rounded-xl text-[10px] sm:text-base font-bold cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2"
+              className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-sm sm:text-base font-bold cursor-not-allowed flex items-center justify-center gap-2"
             >
               Niet beschikbaar
             </button>
           )}
-
-          <div className="hidden sm:flex items-center justify-center text-slate-500 text-sm font-medium group-hover:text-slate-900 transition-colors">
-            Bekijk details
-          </div>
         </div>
       </div>
     </motion.div>
@@ -410,16 +373,14 @@ const BuildCard = ({
 
 // Eén overzichtstegel voor de hele Cube Series (Starter/Performance/Pro delen
 // dezelfde behuizing). Bevat dezelfde premium segmented control als de
-// Cube Series-productpagina — de foto blijft hetzelfde, alleen prijs, korte
-// beschrijving, GPU en de CTA-link wisselen mee met de gekozen variant.
-// Geen volledige specs/benchmarks/voorraad/levertijd hier — dat hoort op de
-// productpagina zelf.
+// Cube Series-productpagina. Bewust minimaal: alleen foto, selector, prijs,
+// korte omschrijving en CTA — volledige specs/voorraad/levertijd horen op de
+// productpagina, niet hier. Geen kaart-chrome (rand/schaduw): de foto en
+// generieuze witruimte dragen de sectie, niet een omkaderde box.
 const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
-  const [touched, setTouched] = useState(false);
   const [selectedModel, setSelectedModel] = useState<CubeModel>('performance');
   const starter = BUILDS.find((b) => b.id === 'starter')!;
   const build = BUILDS.find((b) => b.id === selectedModel)!;
-  const gpu = getSpecValue(build.specs, 'GPU:');
 
   const goToSelectedModel = () => {
     window.location.href = `/cube-series?model=${selectedModel}`;
@@ -431,57 +392,46 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       onClick={goToSelectedModel}
-      onTouchStart={() => setTouched(true)}
-      onTouchEnd={() => setTimeout(() => setTouched(false), 350)}
-      className={`group cursor-pointer bg-white rounded-2xl sm:rounded-3xl overflow-hidden border transition-[transform,border-color,box-shadow] duration-300 flex flex-col
-        ${touched
-          ? 'border-brand-200 shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] -translate-y-1'
-          : 'border-slate-100 hover:border-brand-200 hover:shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] hover:-translate-y-1'
-        }`}
+      className="group cursor-pointer flex flex-col items-center text-center"
     >
       {/* Foto — blijft hetzelfde ongeacht het gekozen niveau, duidelijk groter dan voorheen */}
-      <div className="h-52 sm:h-72 overflow-hidden relative bg-white">
+      <div className="w-full h-64 sm:h-96 relative mb-6 sm:mb-8">
         <img
           src={starter.image[color] ?? starter.image.black}
           alt="Easy PiCi Cube Series"
-          className="w-full h-full object-contain p-6 sm:p-8"
+          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
         />
-        <span className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 text-[10px] sm:text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
-          3 modellen
-        </span>
       </div>
-      <div className="p-4 sm:p-6 flex flex-col flex-1">
-        <h3 className="text-base sm:text-2xl font-black text-slate-900 mb-3 sm:mb-4">Cube Series</h3>
 
-        {/* Segmented control mag niet de kaart-navigatie triggeren — stopt
-            propagation al intern per knop (zie CubeModelSelector). */}
-        <CubeModelSelector selectedModel={selectedModel} onSelect={setSelectedModel} layoutId="cube-model-pill-home" />
+      <h3 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight mb-5 sm:mb-7">Cube Series</h3>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedModel}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
-            className="mt-4 sm:mt-6 flex-1"
-          >
-            <span className="text-lg sm:text-2xl font-black text-brand-600">{build.price}</span>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2 leading-relaxed">
-              {build.shortDesc}
-            </p>
-            <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-2 sm:mt-3">{gpu}</p>
-          </motion.div>
-        </AnimatePresence>
+      {/* Segmented control mag niet de kaart-navigatie triggeren — stopt
+          propagation al intern per knop (zie CubeModelSelector). */}
+      <CubeModelSelector selectedModel={selectedModel} onSelect={setSelectedModel} layoutId="cube-model-pill-home" />
 
-        <a
-          href={`/cube-series?model=${selectedModel}`}
-          onClick={(e) => e.stopPropagation()}
-          className="mt-4 sm:mt-6 w-full py-2.5 sm:py-3 bg-brand-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-1.5 sm:gap-2"
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedModel}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+          className="mt-6 sm:mt-8"
         >
-          Bekijk Cube Series <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
-        </a>
-      </div>
+          <span className="block text-2xl sm:text-3xl font-black text-brand-600">{build.price}</span>
+          <p className="text-sm sm:text-base text-slate-500 mt-1.5 max-w-xs mx-auto leading-relaxed">
+            {build.shortDesc}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+
+      <a
+        href={`/cube-series?model=${selectedModel}`}
+        onClick={(e) => e.stopPropagation()}
+        className="mt-6 sm:mt-8 inline-flex items-center gap-2 text-sm sm:text-base font-bold text-brand-600 group-hover:gap-3 transition-all duration-200"
+      >
+        Bekijk Cube {build.tier} <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
+      </a>
     </motion.div>
   );
 };
@@ -514,7 +464,7 @@ const BuildsSection = ({
           viewport={{ once: true }}
           transition={{ delay: 0.15 }}
           className="text-base sm:text-xl text-slate-500"
-        >Klik op een build voor alle specs en details.</motion.p>
+        >Kies de serie die bij je past.</motion.p>
       </div>
       <div className="flex items-center justify-center gap-2 mb-8 sm:mb-12">
         <button
@@ -534,8 +484,10 @@ const BuildsSection = ({
           Wit
         </button>
       </div>
-      {/* Twee hoofdproducten: Cube Series (eigen productpagina) en Elite Series */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      {/* Twee hoofdproducten: Cube Series (eigen productpagina) en Elite Series.
+          Ruime gap i.p.v. een strakke kaartgrid — de secties staan zonder
+          rand/schaduw, dus witruimte is hier de enige scheidingslijn. */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 sm:gap-20 lg:gap-24">
         <CubeSeriesOverviewCard color={color} />
         {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
           <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />

@@ -51,39 +51,25 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-28">
         <a
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600 transition-colors mb-8 sm:mb-12"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600 transition-colors mb-10 sm:mb-16"
         >
           <ArrowLeft size={16} />
           Terug naar home
         </a>
 
-        <div className="text-center mb-10 sm:mb-14">
+        <div className="text-center mb-12 sm:mb-16">
           <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-3 sm:mb-4">Cube Series</h1>
-          <p className="text-base sm:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            Cube Series is onze kernlijn: drie prestatieniveaus in exact dezelfde premium behuizing.
-            Zelfde bouwkwaliteit, zelfde uitstraling — jij kiest de kracht die bij jouw budget en games past.
+          <p className="text-base sm:text-xl text-slate-500 max-w-xl mx-auto leading-relaxed">
+            Eén premium behuizing, drie prestatieniveaus.
           </p>
         </div>
 
-        <div className="mb-3 sm:mb-4">
+        <div className="mb-14 sm:mb-20">
           <CubeModelSelector selectedModel={selectedModel} onSelect={selectModel} />
         </div>
-
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={`sub-${selectedModel}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
-            className="text-center text-sm sm:text-base text-slate-500 max-w-lg mx-auto mb-12 sm:mb-16"
-          >
-            {build.shortDesc}
-          </motion.p>
-        </AnimatePresence>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -92,18 +78,18 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start"
+            className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-16 items-center"
           >
-            {/* Foto — blijft hetzelfde ongeacht het gekozen niveau */}
+            {/* Foto — blijft hetzelfde ongeacht het gekozen niveau, groot en zonder kader */}
             <div>
-              <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl overflow-hidden h-64 sm:h-96 relative shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+              <div className="h-80 sm:h-[30rem] relative">
                 <img
                   src={build.image[color] ?? build.image.black}
                   alt="Easy PiCi Cube Series"
-                  className="w-full h-full object-contain p-8 sm:p-12"
+                  className="w-full h-full object-contain"
                 />
               </div>
-              <div className="flex items-center justify-center gap-2 mt-4 sm:mt-6">
+              <div className="flex items-center justify-center gap-2 mt-6 sm:mt-8">
                 <button
                   onClick={() => setColor('black')}
                   className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${
@@ -123,39 +109,30 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
               </div>
             </div>
 
-            {/* Info */}
+            {/* Info — ademt rond de foto, geen aparte omkaderde blokken meer */}
             <div>
               <span className={`text-xs font-bold uppercase tracking-wider ${
                 build.id === 'performance' ? 'text-brand-600' : 'text-slate-400'
               }`}>
                 {build.tier}
               </span>
-              <div className="flex items-start justify-between gap-3 mt-1 mb-3">
-                <h2 className="text-2xl sm:text-4xl font-black text-slate-900">{build.name}</h2>
+              <div className="flex items-start justify-between gap-3 mt-1.5 mb-4 sm:mb-5">
+                <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{build.name}</h2>
                 <span className="text-2xl sm:text-4xl font-black text-brand-600 shrink-0">{build.price}</span>
               </div>
-              <p className="text-slate-600 leading-relaxed mb-6">{build.description}</p>
+              <p className="text-slate-600 leading-relaxed mb-6 sm:mb-8">{build.description}</p>
 
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
-                {[
-                  ['CPU', cpu],
-                  ['GPU', gpu],
-                  ['RAM', ram],
-                  ['Opslag', opslag],
-                ].map(([label, value]) => (
-                  <div key={label} className="bg-slate-50 rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-0.5">{label}</p>
-                    <p className="text-sm sm:text-base font-bold text-slate-900">{value}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8">
+                <span className="font-semibold text-slate-900">{cpu}</span>
+                <span className="text-slate-300 mx-2">·</span>
+                <span className="font-semibold text-slate-900">{gpu}</span>
+                <span className="text-slate-300 mx-2">·</span>
+                <span className="font-semibold text-slate-900">{ram}</span>
+                <span className="text-slate-300 mx-2">·</span>
+                <span className="font-semibold text-slate-900">{opslag}</span>
+              </p>
 
-              <div className="bg-slate-50 rounded-xl p-3 sm:p-4 mb-6 text-sm text-slate-600">
-                <span className="font-bold text-slate-900">Prestatie-doel: </span>
-                {build.quickSpec}
-              </div>
-
-              <p className="text-xs sm:text-sm text-slate-400 flex items-center gap-1.5 mb-5">
+              <p className="text-xs sm:text-sm text-slate-400 flex items-center gap-1.5 mb-6 sm:mb-8">
                 <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
                   build.stockStatus === 'in-stock' ? 'bg-green-500' :
                   build.stockStatus === 'on-request' ? 'bg-amber-400' : 'bg-slate-300'
