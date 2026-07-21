@@ -1,25 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Mail, ShoppingBag } from 'lucide-react';
-
-const CUBE_MODELS = ['starter', 'performance', 'pro'] as const;
-type CubeModel = (typeof CUBE_MODELS)[number];
-
-const MODEL_TABS: { key: CubeModel; label: string }[] = [
-  { key: 'starter', label: 'Starter' },
-  { key: 'performance', label: 'Performance' },
-  { key: 'pro', label: 'Pro' },
-];
+import CubeModelSelector, { type CubeModel, getSpecValue, isCubeModel } from '../components/CubeModelSelector';
 
 function getModelFromUrl(): CubeModel {
   const params = new URLSearchParams(window.location.search);
   const model = params.get('model');
-  return (CUBE_MODELS as readonly string[]).includes(model ?? '') ? (model as CubeModel) : 'performance';
-}
-
-function getSpecValue(specs: string[], prefix: string) {
-  const match = specs.find((s) => s.startsWith(prefix));
-  return match ? match.slice(prefix.length).trim() : '—';
+  return isCubeModel(model) ? model : 'performance';
 }
 
 interface CubeSeriesPageProps {
@@ -81,38 +68,8 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
           </p>
         </div>
 
-        {/* Segmented control */}
-        <div className="flex justify-center pt-5 sm:pt-6 mb-3 sm:mb-4">
-          <div className="relative inline-flex items-center gap-1 bg-slate-100 rounded-full p-1">
-            {MODEL_TABS.map((tab) => {
-              const isActive = selectedModel === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => selectModel(tab.key)}
-                  className="relative px-4 sm:px-7 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap"
-                >
-                  {tab.key === 'performance' && (
-                    <span className="absolute -top-5 sm:-top-6 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-bold text-brand-600 whitespace-nowrap">
-                      ⭐ Meest gekozen
-                    </span>
-                  )}
-                  <span className="absolute inset-0 rounded-full overflow-hidden">
-                    {isActive && (
-                      <motion.span
-                        layoutId="cube-model-pill"
-                        className="absolute inset-0 bg-brand-600"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
-                      />
-                    )}
-                  </span>
-                  <span className={`relative z-10 transition-colors duration-200 ${isActive ? 'text-white' : 'text-slate-600'}`}>
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="mb-3 sm:mb-4">
+          <CubeModelSelector selectedModel={selectedModel} onSelect={selectModel} />
         </div>
 
         <AnimatePresence mode="wait">
