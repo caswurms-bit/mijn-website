@@ -88,9 +88,6 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   // Ruwe, ongefilterde scroll-progressie (1-op-1 met de actuele scrollpositie
   // — bepaalt dus de totale scrollafstand/paginalengte, niet de smoothing).
   const targetProgress = useRef(0);
-  // Extra dempingslaag tussen de ruwe scroll-input en de bestaande glide
-  // hieronder — zie animate() voor waarom.
-  const smoothedTargetProgress = useRef(0);
   const currentProgress = useRef(0);
   const animationFrameId = useRef<number | null>(null);
   // iOS Safari decodeert/toont geen enkel videoframe totdat de video echt
@@ -145,37 +142,30 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   };
 
   const animate = () => {
-    // Twee gecascadeerde dempingslagen i.p.v. één, om de scroll-INPUT zelf
-    // sterker te smoothen vóórdat 'm wordt toegepast — niet enkel de
-    // uitvoer. Eén enkel lerp-stadium reageert namelijk altijd meteen (al
-    // is het maar een fractie) op een plotselinge sprong in targetProgress;
-    // bij een grote, hortende sprong (typisch voor een Windows-muiswiel,
-    // i.t.t. de soepele/incrementele input van een Mac-trackpad) is die
-    // eerste reactie zelf al merkbaar. Door de ruwe scroll-input eerst door
-    // een eigen, trage laag (smoothedTargetProgress) te halen vóór de
-    // bestaande glide (currentProgress) daar weer naartoe lerpt, ontstaat
-    // een geleidelijke S-curve i.p.v. een directe (al is het gedempte)
-    // sprong — bij de gelijkmatige, continue input van een trackpad blijft
-    // de extra laag nagenoeg onmerkbaar, omdat er dan nooit een echte
-    // "sprong" is om te dempen.
+    // Onderscheid tussen kleine, continue scroll-updates (Mac-trackpad) en
+    // een enkele grote sprong (Windows-muiswiel-tick), puur op basis van hoe
+    // ver currentProgress nog achterloopt op targetProgress — niet via een
+    // aparte smoothing-laag die op alle input gelijk drukt (die maakte ook
+    // trackpad-scrollen trager, wat niet de bedoeling was).
     //
-    // TIJDELIJK, bewust extreem gezet (0.06 -> 0.01) om te bevestigen dat dit
-    // de juiste knop is voor het Windows-muiswiel-probleem: één scroll-tick
-    // mag nu nog maar een piepklein stukje vooruit — daarna weer terugschalen
-    // naar een subtielere waarde. glideFactor is licht verlaagd (algemene
-    // smoothing), niet drastisch, en werkt op beide input-methoden gelijk.
-    const inputSmoothingFactor = 0.01;
-    const glideFactor = 0.05;
+    // Bij trackpad-scrollen blijft dat gat klein, omdat elk scroll-event al
+    // een kleine stap is — dan gebruiken we SMALL_JUMP_FACTOR, ongeveer de
+    // oorspronkelijke, directe snelheid van vóór alle Windows-tuning. Bij een
+    // enkele grote muiswiel-sprong is het gat in één klap groot; dan schakelt
+    // hij naar LARGE_JUMP_FACTOR en haalt hij het gat sterk vertraagd in —
+    // dat gat krimpt daarna geleidelijk, dus zodra het weer onder de
+    // drempel zakt versnelt de laatste stukjes weer naar het normale tempo.
+    const LARGE_JUMP_THRESHOLD = 0.05;
+    const SMALL_JUMP_FACTOR = 0.08;
+    const LARGE_JUMP_FACTOR = 0.03;
 
-    const inputDiff = targetProgress.current - smoothedTargetProgress.current;
-    smoothedTargetProgress.current += inputDiff * inputSmoothingFactor;
-
-    const glideDiff = smoothedTargetProgress.current - currentProgress.current;
-    currentProgress.current += glideDiff * glideFactor;
+    const diff = targetProgress.current - currentProgress.current;
+    const factor = Math.abs(diff) > LARGE_JUMP_THRESHOLD ? LARGE_JUMP_FACTOR : SMALL_JUMP_FACTOR;
+    currentProgress.current += diff * factor;
 
     seekTo(currentProgress.current);
 
-    if (Math.abs(inputDiff) > 0.0001 || Math.abs(glideDiff) > 0.0001) {
+    if (Math.abs(diff) > 0.0001) {
       animationFrameId.current = requestAnimationFrame(animate);
     } else {
       animationFrameId.current = null;
