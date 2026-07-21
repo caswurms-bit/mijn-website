@@ -305,7 +305,7 @@ const BuildCard = ({
       viewport={{ once: true }}
       transition={{ delay: idx * 0.1 }}
       onClick={() => onOpenBuild(build)}
-      className="group cursor-pointer flex flex-col"
+      className="group cursor-pointer flex flex-col rounded-2xl sm:rounded-3xl border border-slate-100 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:border-slate-200 transition-shadow duration-300 p-5 sm:p-8"
     >
       <div className={`h-64 sm:h-96 overflow-hidden relative rounded-2xl sm:rounded-3xl ${isProductPhoto ? 'bg-white' : ''}`}>
         {!isProductPhoto && (
@@ -414,7 +414,7 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       onClick={goToSelectedModel}
-      className="group cursor-pointer flex flex-col items-center text-center"
+      className="group cursor-pointer flex flex-col items-center text-center rounded-2xl sm:rounded-3xl border border-slate-100 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:border-slate-200 transition-shadow duration-300 p-5 sm:p-8"
     >
       {/* Foto — blijft hetzelfde ongeacht het gekozen niveau. Groter dan Elite's
           foto, want Cube Series is de hoofdserie en mag dat visueel uitstralen. */}

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, ShoppingBag } from 'lucide-react';
 import CubeModelSelector, { type CubeModel, getSpecValue, isCubeModel } from '../components/CubeModelSelector';
 
@@ -61,6 +61,15 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
     setTimeout(() => setAdded(false), 1800);
   };
 
+  // Zachte, veren-gedempte drift op de sticky foto — puur CSS sticky "plakt"
+  // hard vast zodra 'm pinned raakt, wat abrupt aanvoelt. Deze subtiele,
+  // spring-smoothed beweging (boven op de sticky-positionering) laat de foto
+  // natuurlijker "meeademen" met de scroll i.p.v. star stil te staan.
+  const stickyZoneRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: stickyZoneRef, offset: ['start start', 'end end'] });
+  const smoothScrollProgress = useSpring(scrollYProgress, { stiffness: 60, damping: 22, mass: 0.6 });
+  const photoDrift = useTransform(smoothScrollProgress, [0, 1], [-18, 18]);
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
@@ -104,28 +113,32 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
 
         {/* Echte desktop-layout: foto links, informatie rechts, binnen de
             volledige breedte i.p.v. één smalle gecentreerde kolom. Op
-            mobiel blijft dit gewoon onder elkaar staan. */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedModel}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start"
-          >
-            {/* Links — grote foto, blijft hetzelfde ongeacht het gekozen niveau.
-                Sticky op desktop zodat 'm in beeld blijft terwijl je door de
-                info rechts scrollt. */}
-            <div className="md:sticky md:top-28">
-              <div className="h-[22rem] md:h-[30rem] lg:h-[34rem] relative">
-                <img
-                  src={build.image[color] ?? build.image.black}
-                  alt="Easy PiCi Cube Series"
-                  className="w-full h-full object-contain"
-                />
+            mobiel blijft dit gewoon onder elkaar staan. Stabiele wrapper
+            (blijft gemount bij het wisselen van model) zodat de scroll-
+            tracking voor de foto-drift hieronder niet steeds herstart. */}
+        <div ref={stickyZoneRef}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedModel}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start"
+            >
+              {/* Links — grote foto, blijft hetzelfde ongeacht het gekozen niveau.
+                  Sticky op desktop zodat 'm in beeld blijft terwijl je door de
+                  info rechts scrollt, met een zachte veren-gedempte drift
+                  erboven op zodat het meebewegen niet star/abrupt aanvoelt. */}
+              <div className="md:sticky md:top-28">
+                <motion.div style={{ y: photoDrift }} className="h-[22rem] md:h-[30rem] lg:h-[34rem] relative">
+                  <img
+                    src={build.image[color] ?? build.image.black}
+                    alt="Easy PiCi Cube Series"
+                    className="w-full h-full object-contain"
+                  />
+                </motion.div>
               </div>
-            </div>
 
             {/* Rechts — naam, prijs, USP, omschrijving, specs, vertrouwen, CTA */}
             <div>
@@ -211,8 +224,9 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
                 </button>
               )}
             </div>
-          </motion.div>
-        </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
