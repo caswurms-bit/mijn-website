@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 
 // MP4 (H.264) i.p.v. WebM — Safari (iOS/macOS) ondersteunt WebM niet
 // betrouwbaar, waardoor de video daar nooit laadde en de hero onzichtbaar
-// bleef. MP4 wordt overal ondersteund, dus één bron volstaat. 60fps met
-// keyframe-interval 1 (elk frame is een keyframe) voor soepel scrubben.
+// bleef. MP4 wordt overal ondersteund, dus één bron volstaat. 24fps, ~4s,
+// ~1,6MB — kleiner dan de vorige 60fps-versie, zelfde keyframe-interval-1
+// encoding (elk frame is een keyframe) voor soepel scrubben.
 const HERO_VIDEO_SRC =
-  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/web%20heropage/60%20pfs%20pc.mp4';
+  'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/24fps%20front%20page/24%20fps%20pc%20.mp4';
 
 // Valt terug op de donkere achtergrond (zonder video) als 'loadeddata' niet
 // binnen deze tijd vuurt en er ook geen 'error' is opgetreden — voorkomt dat
