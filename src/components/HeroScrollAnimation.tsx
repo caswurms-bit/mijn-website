@@ -212,7 +212,12 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     // strikte grens en raakte zo telkens opnieuw dit onbeschermde randgeval,
     // wat de sprongsgewijze (~33%/~66%) voortgang veroorzaakte.
     const inZone = rect.top <= WHEEL_MAX_DELTA && rect.top >= -scrollDistance - WHEEL_MAX_DELTA;
-    if (!inZone) return;
+    // TIJDELIJK: debug-logging om per wheel-event te zien wat handleWheel doet.
+    console.log('[handleWheel] rect.top:', rect.top, 'inZone:', inZone);
+    if (!inZone) {
+      console.log('[handleWheel] buiten zone, native scroll');
+      return;
+    }
 
     const currentRawProgress = Math.min(1, Math.max(0, -rect.top / scrollDistance));
     // Aan een uiteinde en verder dezelfde kant op scrollen: geef de controle
@@ -226,6 +231,14 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
     const clampedDelta = Math.min(Math.abs(e.deltaY), WHEEL_MAX_DELTA) * Math.sign(e.deltaY);
     const nextRawProgress = Math.min(1, Math.max(0, currentRawProgress + clampedDelta / scrollDistance));
+
+    // TIJDELIJK: debug-logging.
+    console.log(
+      '[handleWheel] deltaY:', e.deltaY,
+      'currentRawProgress:', currentRawProgress,
+      'clampedDelta:', clampedDelta,
+      'nextRawProgress:', nextRawProgress
+    );
 
     targetProgress.current = easeScrollProgress(nextRawProgress);
     if (animationFrameId.current === null) {
