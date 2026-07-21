@@ -29,6 +29,12 @@ const SEEK_END_EPSILON = 0.05;
 // voorkomt overbodige seeks (en dus werk) bij subpixel scroll-updates.
 const SEEK_MIN_DELTA = 0.01;
 
+// Maximale |deltaY| (in px) die één 'wheel'-event mag bijdragen aan de
+// progress — zie handleWheel. Normaliseert een grote, native Windows-
+// muiswiel-sprong naar dezelfde stapgrootte als een kleine trackpad-tik,
+// ongeacht hoe groot de native delta was.
+const WHEEL_MAX_DELTA = 40;
+
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
   return window.innerWidth < 768;
@@ -183,6 +189,49 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     }
   };
 
+  // Het eigenlijke probleem zat niet in de output-smoothing maar in de
+  // input: op Windows springt de native scrollpositie (rect.top) zelf al in
+  // één klap ver (bv. door een OS-instelling als "één scherm per keer"),
+  // dus rawProgress in handleScroll is dan al bijna 1 vóórdat er iets te
+  // lerpen valt. Hier onderscheppen we het 'wheel'-event zelf zolang de
+  // sectie in de pinned/sticky fase zit, clampen we de stapgrootte, en
+  // sturen we de paginascroll zelf aan met die genormaliseerde stap — zo
+  // krijgt rect.top (en dus rawProgress) nooit meer de kans om in één keer
+  // ver te springen. Buiten die fase (ervoor/erna) doen we niets: scrollen
+  // blijft daar gewoon native, via handleScroll hierboven.
+  const handleWheel = (e: WheelEvent) => {
+    if (!sectionRef.current || !canScrub) return;
+    const rect = sectionRef.current.getBoundingClientRect();
+    const scrollDistance = window.innerHeight * 0.8; // zelfde afstand als in handleScroll
+    const inZone = rect.top <= 0 && rect.top >= -scrollDistance;
+    if (!inZone) return;
+
+    const currentRawProgress = Math.min(1, Math.max(0, -rect.top / scrollDistance));
+    // Aan een uiteinde en verder dezelfde kant op scrollen: geef de controle
+    // terug aan de browser, zodat native scroll voorbij de hero (of terug
+    // erboven) gewoon werkt i.p.v. hier vast te blijven zitten.
+    if ((currentRawProgress >= 1 && e.deltaY > 0) || (currentRawProgress <= 0 && e.deltaY < 0)) {
+      return;
+    }
+
+    e.preventDefault();
+
+    const clampedDelta = Math.min(Math.abs(e.deltaY), WHEEL_MAX_DELTA) * Math.sign(e.deltaY);
+    const nextRawProgress = Math.min(1, Math.max(0, currentRawProgress + clampedDelta / scrollDistance));
+
+    targetProgress.current = easeScrollProgress(nextRawProgress);
+    if (animationFrameId.current === null) {
+      animationFrameId.current = requestAnimationFrame(animate);
+    }
+
+    // Stuur de daadwerkelijke paginascroll zelf aan (i.p.v. de browser zijn
+    // eigen, mogelijk veel grotere, delta te laten toepassen) zodat de
+    // zichtbare scrollpositie gelijke tred houdt met deze genormaliseerde
+    // progress — rect.top (en dus handleScroll) blijft hierdoor vanzelf
+    // consistent met kleine stapjes i.p.v. grote sprongen.
+    window.scrollBy(0, clampedDelta);
+  };
+
   const handleResize = () => {
     applyVideoTransform();
   };
@@ -305,11 +354,14 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       applyVideoTransform();
       window.addEventListener('scroll', handleScroll, { passive: true });
       window.addEventListener('resize', handleResize);
+      // passive: false — nodig om preventDefault() te mogen aanroepen in handleWheel.
+      window.addEventListener('wheel', handleWheel, { passive: false });
       handleScroll();
     }
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('wheel', handleWheel);
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   }, [canScrub]);
