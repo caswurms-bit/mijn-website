@@ -53,6 +53,12 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   const targetProgress = useRef(0);
   const currentProgress = useRef(0);
   const animationFrameId = useRef<number | null>(null);
+  // iOS Safari decodeert/toont geen enkel videoframe totdat de video echt
+  // een keer heeft gespeeld, ook al zijn metadata/loadeddata al gevuurd —
+  // vandaar autoplay (mag: muted + playsInline) gevolgd door een meteen
+  // erop volgende pause, puur om dat eerste frame te forceren. Deze vlag
+  // zorgt dat we dat maar één keer doen.
+  const hasAutoPaused = useRef(false);
 
   // Positioneert en schaalt de video exact zoals voorheen elk canvas-frame
   // werd getekend: eerst een "cover"-ratio bepalen, daarna bewust kleiner
@@ -150,10 +156,22 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       setHasError(true);
       setIsReady(true);
     };
+    // iOS Safari toont pas een gedecodeerd frame nadat de video echt heeft
+    // gespeeld — 'playing' vuurt pas zodra dat frame zichtbaar is (in
+    // tegenstelling tot 'loadeddata', dat op iOS soms te vroeg vuurt zonder
+    // dat er al iets getekend is). Meteen pauzeren zodra dat gebeurt: we
+    // willen alleen dat ene frame forceren, niet dat de video blijft spelen
+    // — de bestaande seekTo-logica stuurt daarna gewoon de positie aan.
+    const handlePlaying = () => {
+      if (hasAutoPaused.current) return;
+      hasAutoPaused.current = true;
+      video.pause();
+    };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('error', handleError);
+    video.addEventListener('playing', handlePlaying);
 
     // Kan al geladen zijn (bv. uit browsercache) vóórdat dit effect draait.
     if (video.readyState >= video.HAVE_METADATA) handleLoadedMetadata();
@@ -173,6 +191,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('error', handleError);
+      video.removeEventListener('playing', handlePlaying);
       window.clearTimeout(timeoutId);
     };
   }, []);
@@ -204,6 +223,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
               src={HERO_VIDEO_SRC}
               muted
               playsInline
+              autoPlay
               preload="auto"
               className="absolute block"
             />
