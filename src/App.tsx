@@ -529,7 +529,7 @@ const StorySection = () => (
       >
         <h2 className="text-3xl sm:text-5xl font-bold mb-4 sm:mb-6">Waarom Easy PiCi bestaat</h2>
         <p className="text-lg sm:text-xl text-brand-400 font-medium mb-8 sm:mb-12">
-          Ik merkte dat je als gamer eigenlijk twee slechte keuzes had: betalen voor een overpriced merk-pc, of zelf bouwen en hopen dat het goed gaat. Dat kon anders.
+          Als gamer heb je meestal twee opties: te veel betalen voor een naam, of zelf bouwen en hopen dat het goed komt. Wij kozen voor een derde weg.
         </p>
       </motion.div>
       <div className="grid grid-cols-2 gap-4 sm:gap-12 mb-10 sm:mb-14">
@@ -544,7 +544,7 @@ const StorySection = () => (
             <span className="leading-tight">Wat er mis is met de rest</span>
           </h3>
           <p className="text-xs sm:text-lg text-slate-300 leading-relaxed">
-            De meeste pc's die je online koopt zijn óf overpriced voor wat erin zit, óf slordig gebouwd. Je betaalt voor merknamen en marketing. Van binnen: willekeurige onderdelen en kabels door elkaar. Niet wat je verwacht voor dat geld.
+            Je betaalt vaak voor een naam en marketing, niet voor kwaliteit. Willekeurige onderdelen, matige afwerking — je weet nooit precies wat je krijgt.
           </p>
         </motion.div>
         <motion.div
@@ -555,13 +555,34 @@ const StorySection = () => (
         >
           <h3 className="text-lg sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
             <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs sm:text-sm">2</span>
-            <span className="leading-tight">Hoe ik dat anders doe</span>
+            <span className="leading-tight">Hoe wij het anders doen</span>
           </h3>
           <p className="text-xs sm:text-lg text-slate-300 leading-relaxed">
-            Ik bouw elke pc alsof hij voor mezelf is. Eerlijke onderdelen, nette kabels, en alles getest voor verzending. Ja, sommige builds hebben RGB en waterkoeling — dat kost iets meer, maar het eindresultaat is mooier en beter afgewerkt. En je hoeft niks zelf te installeren.
+            Wij bouwen elke pc met dezelfde zorg als voor onszelf. Eerlijke onderdelen, vakkundige afwerking, volledig getest voordat hij de deur uitgaat.
           </p>
         </motion.div>
       </div>
+
+      {/* Belangrijkste USP — eigen prominente plek, zelfde stijl als de USP-box
+          op de productpagina's, zodat de belofte overal even zwaar weegt. */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.25 }}
+        className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-6 sm:p-10 mb-6 sm:mb-8"
+      >
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          <Zap size={20} className="text-brand-400 shrink-0" />
+          <h3 className="text-lg sm:text-2xl font-black text-white">Direct klaar voor gebruik</h3>
+        </div>
+        <p className="text-sm sm:text-lg text-slate-300 leading-relaxed mb-3 sm:mb-4 max-w-2xl">
+          Je hoeft niets zelf uit te zoeken of te installeren. Windows, drivers en de belangrijkste instellingen staan al goed.
+        </p>
+        <p className="text-base sm:text-xl font-bold text-brand-400">
+          Uitpakken. Aansluiten. Gamen.
+        </p>
+      </motion.div>
 
       {/* Wat je mag verwachten blok */}
       <motion.div
@@ -572,13 +593,13 @@ const StorySection = () => (
         className="bg-slate-800/60 rounded-2xl sm:rounded-3xl p-6 sm:p-10"
       >
         <h3 className="text-base sm:text-xl font-bold text-white mb-4 sm:mb-6">
-          Wat je van elke Easy PiCi mag verwachten:
+          Wat je van iedere Easy PiCi mag verwachten:
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {[
-            'Je pc komt volledig klaar aan. Drivers, updates, instellingen — alles gedaan. Aansluiten, aanzetten en gamen.',
-            'Elke build wordt getest op temperatuur, stabiliteit en fps voordat hij de deur uit gaat.',
-            'RGB en waterkoeling zijn bewuste keuzes — voor looks én bouwkwaliteit, niet alleen voor de specs.',
+            'Onderdelen gekozen op prestatie, niet op naam.',
+            'Getest op temperatuur, stabiliteit en fps voor verzending.',
+            'Verzending binnen 3 werkdagen, netjes verpakt.',
           ].map((item, i) => (
             <div key={i} className="flex items-start gap-3">
               <CheckCircle2 size={18} className="text-brand-400 shrink-0 mt-0.5" />
