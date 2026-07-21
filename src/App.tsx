@@ -6,9 +6,9 @@ import CustomBuildModal from './components/CustomBuildModal';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import CubeSeriesPage from './pages/CubeSeriesPage';
+import EliteSeriesPage from './pages/EliteSeriesPage';
 import CubeModelSelector, { type CubeModel } from './components/CubeModelSelector';
 import TrustpilotWidget from './components/TrustpilotWidget';
-import { useBodyScrollLock } from './hooks/useBodyScrollLock';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Settings,
@@ -462,13 +462,11 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
 const BuildsSection = ({
   color,
   onColorChange,
-  onOpenBuild,
   onAddToCart,
   onRequestBuild,
 }: {
   color: 'black' | 'white';
   onColorChange: (c: 'black' | 'white') => void;
-  onOpenBuild: (b: any) => void;
   onAddToCart: (b: any) => void;
   onRequestBuild: (b: any) => void;
 }) => {
@@ -513,7 +511,7 @@ const BuildsSection = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16 sm:gap-20 lg:gap-24">
         <CubeSeriesOverviewCard color={color} />
         {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
-          <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={onOpenBuild} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
+          <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={() => { window.location.href = '/elite-series'; }} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
         ))}
       </div>
     </div>
@@ -668,161 +666,6 @@ const Footer = () => (
     </div>
   </footer>
 );
-
-const BuildModal = ({
-  build,
-  color,
-  onClose,
-  onAddToCart,
-  onRequestBuild,
-}: {
-  build: any;
-  color: 'black' | 'white';
-  onClose: () => void;
-  onAddToCart: (b: any) => void;
-  onRequestBuild: (b: any) => void;
-}) => {
-  const [added, setAdded] = useState(false);
-  // Zolang deze modal gemount is, mag de achtergrondpagina niet scrollen
-  // (iOS Safari negeert overflow:hidden op de body, vandaar de fixed-lock).
-  useBodyScrollLock(Boolean(build));
-
-  const handleAdd = () => {
-    if (added) return;
-    onAddToCart(build);
-    setAdded(true);
-    setTimeout(() => { setAdded(false); onClose(); }, 1200);
-  };
-
-  if (!build) return null;
-  // Zelfde onderscheid als in BuildCard: nieuwe productfoto's met witte/zwarte
-  // achtergrond (starter/performance/pro) vs. de oude sfeervolle foto (elite).
-  const isProductPhoto = Boolean(build.image.white);
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          onClick={onClose}
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-white rounded-none sm:rounded-3xl overflow-hidden w-full sm:max-w-[90vw] h-screen sm:h-auto sm:max-h-[90vh] shadow-2xl z-10 flex flex-col sm:flex-row"
-        >
-          {/* Image — links op desktop, boven op mobiel */}
-          <div className={`h-80 sm:h-auto sm:w-[45%] sm:shrink-0 overflow-hidden relative ${isProductPhoto ? 'bg-white' : ''}`}>
-            <img
-              src={build.image[color] ?? build.image.black}
-              alt={build.name}
-              className={isProductPhoto ? 'w-full h-full object-contain p-6 sm:p-10' : 'w-full h-full object-cover'}
-            />
-            {!isProductPhoto && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-transparent" />
-            )}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 sm:top-3 sm:right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-            >
-              <X size={16} />
-            </button>
-            <span className="absolute bottom-3 left-3 text-xs font-bold text-white bg-brand-600 px-2.5 py-1 rounded-full sm:hidden">
-              {build.target}
-            </span>
-          </div>
-          {/* Content — rechts op desktop, scroll */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-6 sm:p-7">
-              <div className="flex items-start justify-between mb-4 sm:mb-3">
-                <div>
-                  <h2 className="text-xl sm:text-3xl font-black text-slate-900">{build.name}</h2>
-                  <p className="text-slate-500 text-sm hidden sm:block">{build.target}</p>
-                </div>
-                <span className="text-xl sm:text-3xl font-black text-brand-600 ml-3 shrink-0">{build.price}</span>
-              </div>
-              <p className="text-slate-600 mb-5 sm:mb-4 leading-relaxed text-base">{build.description}</p>
-              <div className="mb-5 sm:mb-4">
-                <h3 className="font-bold text-slate-900 mb-3 sm:mb-2 text-sm sm:text-base">Specificaties</h3>
-                <ul className="space-y-2 sm:space-y-1.5">
-                  {build.specs.map((spec: string, i: number) => (
-                    <li key={i} className="flex items-center gap-2 text-sm sm:text-base text-slate-600">
-                      <CheckCircle2 size={13} className="text-brand-500 shrink-0" />
-                      {spec}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-slate-50 rounded-xl p-4 sm:p-3 text-sm text-slate-600 space-y-1.5 sm:space-y-1">
-                <p>🛡️ {build.warranty}</p>
-                <p>📦 {build.note}</p>
-              </div>
-
-              {/* Levertijd in modal */}
-              <div className="mt-4 sm:mt-3 flex items-center gap-2">
-                <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-                  build.stockStatus === 'in-stock' ? 'bg-green-500' :
-                  build.stockStatus === 'on-request' ? 'bg-amber-400' : 'bg-slate-300'
-                }`} />
-                <span className="text-sm text-slate-500">{build.deliveryText}</span>
-              </div>
-            </div>
-
-            {/* Sticky knop */}
-            <div className="shrink-0 p-5 sm:p-7 sm:pt-4 border-t border-slate-100 space-y-3">
-              {build.stockStatus === 'in-stock' && (
-                <motion.button
-                  onClick={handleAdd}
-                  animate={added ? { backgroundColor: '#16a34a' } : { backgroundColor: '' }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 overflow-hidden"
-                >
-                  <AnimatePresence mode="wait" initial={false}>
-                    {added ? (
-                      <motion.span key="added" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                        <CheckCircle2 size={18} /> Toegevoegd!
-                      </motion.span>
-                    ) : (
-                      <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                        <ShoppingBag size={18} /> Bestel direct
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-              )}
-              {build.stockStatus === 'on-request' && (
-                <button
-                  onClick={() => { onClose(); onRequestBuild(build); }}
-                  className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <ShoppingBag size={18} /> Bestel direct
-                </button>
-              )}
-              {build.stockStatus === 'unavailable' && (
-                <button disabled className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl font-bold cursor-not-allowed flex items-center justify-center gap-2">
-                  Niet beschikbaar
-                </button>
-              )}
-              {build.stockStatus !== 'unavailable' && (
-                <div className="grid grid-cols-3 gap-1 pt-1">
-                  {['Volledig geïnstalleerd', 'Getest op performance', 'Geen gedoe met drivers'].map((t) => (
-                    <div key={t} className="flex items-start gap-1 text-[10px] sm:text-xs text-slate-500 leading-tight">
-                      <CheckCircle2 size={11} className="text-green-500 shrink-0 mt-0.5" />
-                      {t}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
-};
 
 const CartModal = ({
   cart,
@@ -1065,13 +908,11 @@ const SuccessPage = () => (
 // --- APP ---
 export default function App() {
   const [cart, setCart] = useState<any[]>([]);
-  const [selectedBuild, setSelectedBuild] = useState<any>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [requestBuild, setRequestBuild] = useState<any>(null);
   const [customBuildOpen, setCustomBuildOpen] = useState(false);
-  // Globale kleurkeuze (zwart/wit) voor de builds-sectie, gedeeld tussen
-  // BuildsSection (de toggle + alle kaarten) en BuildModal.
+  // Globale kleurkeuze (zwart/wit) voor de builds-sectie.
   const [buildColor, setBuildColor] = useState<'black' | 'white'>('black');
 
   // Stripe stuurt de klant terug met ?success=true in de URL
@@ -1118,21 +959,46 @@ export default function App() {
     );
   }
 
+  // Elite Series heeft, net als Cube Series, een eigen productpagina i.p.v.
+  // een modal — zelfde shell (Navbar/Footer/modals), zodat cart/checkout/
+  // aanvraag overal hetzelfde blijven werken.
+  if (pathname === '/elite-series') {
+    const elite = BUILDS.find((b) => b.id === 'elite')!;
+    return (
+      <div className="min-h-screen bg-slate-950">
+        <Navbar cartCount={cart.length} onOpenCart={() => setCartOpen(true)} />
+        <EliteSeriesPage build={elite} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
+        <Footer />
+        <AnimatePresence>
+          {cartOpen && (
+            <CartModal
+              cart={cart}
+              onClose={() => setCartOpen(false)}
+              onRemove={removeFromCart}
+              onCheckout={() => { setCartOpen(false); setCheckoutOpen(true); }}
+            />
+          )}
+        </AnimatePresence>
+        {checkoutOpen && (
+          <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+        )}
+        {requestBuild && (
+          <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950">
       <Navbar cartCount={cart.length} onOpenCart={() => setCartOpen(true)} />
       <HeroSection />
       <FeaturesSection />
       <StorySection />
-      <BuildsSection color={buildColor} onColorChange={setBuildColor} onOpenBuild={setSelectedBuild} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
+      <BuildsSection color={buildColor} onColorChange={setBuildColor} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
       <CustomRequestSection onOpen={() => setCustomBuildOpen(true)} />
       <TrustpilotSection />
       <Footer />
-      <AnimatePresence>
-        {selectedBuild && (
-          <BuildModal build={selectedBuild} color={buildColor} onClose={() => setSelectedBuild(null)} onAddToCart={addToCart} onRequestBuild={(b) => { setSelectedBuild(null); setRequestBuild(b); }} />
-        )}
-      </AnimatePresence>
       <AnimatePresence>
         {cartOpen && (
           <CartModal
