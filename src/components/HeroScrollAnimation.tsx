@@ -13,6 +13,13 @@ const HERO_VIDEO_SRC =
 // duidelijke 'error' oplevert (bv. trage verbinding, ontbrekende bron).
 const LOAD_TIMEOUT_MS = 8000;
 
+// Start het downloaden van de video pas als de hero-sectie dit dichtbij
+// nadert, i.p.v. meteen bij het laden van de pagina — de video is met
+// preload="auto" een relatief zware download die anders bandbreedte/
+// prioriteit wegneemt van kritiekere content (LCP). 200px marge zodat het
+// laden al begint vlak voordat de sectie daadwerkelijk in beeld komt.
+const INTERSECTION_ROOT_MARGIN = '200px';
+
 // Kleine marge t.o.v. de exacte duur — sommige browsers seeken niet
 // betrouwbaar naar precies `duration`, vlak ervoor werkt altijd en is
 // visueel niet te onderscheiden van het allerlaatste frame.
@@ -65,6 +72,10 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [hasError, setHasError] = useState(false);
+  // Pas true zodra de sectie het viewport nadert (IntersectionObserver) —
+  // tot die tijd krijgt de video geen src/preload, zodat er niets gedownload
+  // wordt.
+  const [shouldLoad, setShouldLoad] = useState(false);
   // Losgekoppeld van `isReady`: de sectie mag al zichtbaar zijn/faden zodra
   // het eerste frame er staat ('loadeddata'), maar scroll mag pas de video
   // gaan aansturen zodra er genoeg gebufferd is — anders hapert scrubbing op
@@ -157,15 +168,38 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     applyVideoTransform();
   };
 
+  // Bepaalt wanneer de video-download start: pas zodra de sectie (bijna) in
+  // beeld komt, niet al bij het mounten van de pagina.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: INTERSECTION_ROOT_MARGIN }
+    );
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
   // Laadt de video en bepaalt wanneer 'm getoond mag worden. Metadata geeft
   // de duur (nodig om currentTime te kunnen zetten — in sommige browsers
   // werkt seeken pas zodra readyState >= HAVE_METADATA). "loadeddata" geeft
   // aan dat het eerste frame daadwerkelijk gedecodeerd/te tonen is, zodat we
   // pas dan faden i.p.v. een witte flits te tonen. Scrubben zelf wordt pas
   // vrijgegeven zodra het bestand voldoende gebufferd is (zie canScrub).
+  // Wacht op `shouldLoad` zodat deze pas opstart nadat de video daadwerkelijk
+  // een src heeft gekregen (zie IntersectionObserver hierboven) — anders zou
+  // de LOAD_TIMEOUT_MS-countdown al lopen vóórdat er iets te laden viel.
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !shouldLoad) return;
 
     // Twee onafhankelijke "klaar"-vlaggen: de sectie mag al zichtbaar
     // worden (settledReveal) ruim voordat scrubben veilig is (settledScrub).
@@ -245,7 +279,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       video.removeEventListener('progress', handleProgress);
       window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [shouldLoad]);
 
   useEffect(() => {
     if (canScrub) {
@@ -271,11 +305,11 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
           {!hasError && (
             <video
               ref={videoRef}
-              src={HERO_VIDEO_SRC}
+              src={shouldLoad ? HERO_VIDEO_SRC : undefined}
               muted
               playsInline
               autoPlay
-              preload="auto"
+              preload={shouldLoad ? 'auto' : 'none'}
               className="absolute block"
             />
           )}

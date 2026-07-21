@@ -1,10 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, lazy, Suspense } from 'react';
 import HeroScrollAnimation from './components/HeroScrollAnimation';
-import CheckoutModal from './components/CheckoutModal';
-import RequestBuildModal from './components/RequestBuildModal';
-import CustomBuildModal from './components/CustomBuildModal';
-import TermsPage from './pages/TermsPage';
-import PrivacyPage from './pages/PrivacyPage';
 import CubeSeriesPage from './pages/CubeSeriesPage';
 import EliteSeriesPage from './pages/EliteSeriesPage';
 import CubeModelSelector, { type CubeModel } from './components/CubeModelSelector';
@@ -23,6 +18,17 @@ import {
   CreditCard,
   Mail
 } from 'lucide-react';
+
+// Lazy geladen: geen van deze componenten is nodig voor de eerste render van
+// de homepage (modals achter een klik, of losse content-pagina's) — zo
+// blijven ze buiten de hoofdbundle. CheckoutModal trekt zo ook @stripe/*
+// pas binnen op het moment dat iemand daadwerkelijk gaat afrekenen, i.p.v.
+// dat Stripe's script al meekomt bij het laden van de homepage.
+const CheckoutModal = lazy(() => import('./components/CheckoutModal'));
+const RequestBuildModal = lazy(() => import('./components/RequestBuildModal'));
+const CustomBuildModal = lazy(() => import('./components/CustomBuildModal'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 
 // --- DATA ---
 const BUILDS = [
@@ -943,10 +949,10 @@ export default function App() {
   // Toon de succespagina als Stripe terugkeert met success=true
   if (isSuccess) return <SuccessPage />;
 
-  // Losse content-pagina's op basis van het pathname
+  // Losse content-pagina's op basis van het pathname — lazy, dus met Suspense.
   const { pathname } = window.location;
-  if (pathname === '/voorwaarden') return <TermsPage />;
-  if (pathname === '/privacy') return <PrivacyPage />;
+  if (pathname === '/voorwaarden') return <Suspense fallback={null}><TermsPage /></Suspense>;
+  if (pathname === '/privacy') return <Suspense fallback={null}><PrivacyPage /></Suspense>;
 
   const addToCart = (build: any) => setCart((prev) => [...prev, build]);
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
@@ -971,10 +977,14 @@ export default function App() {
           )}
         </AnimatePresence>
         {checkoutOpen && (
-          <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+          <Suspense fallback={null}>
+            <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+          </Suspense>
         )}
         {requestBuild && (
-          <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+          <Suspense fallback={null}>
+            <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+          </Suspense>
         )}
       </div>
     );
@@ -1001,10 +1011,14 @@ export default function App() {
           )}
         </AnimatePresence>
         {checkoutOpen && (
-          <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+          <Suspense fallback={null}>
+            <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+          </Suspense>
         )}
         {requestBuild && (
-          <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+          <Suspense fallback={null}>
+            <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+          </Suspense>
         )}
       </div>
     );
@@ -1031,13 +1045,19 @@ export default function App() {
         )}
       </AnimatePresence>
       {checkoutOpen && (
-        <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+        <Suspense fallback={null}>
+          <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
+        </Suspense>
       )}
       {requestBuild && (
-        <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+        <Suspense fallback={null}>
+          <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
+        </Suspense>
       )}
       {customBuildOpen && (
-        <CustomBuildModal onClose={() => setCustomBuildOpen(false)} />
+        <Suspense fallback={null}>
+          <CustomBuildModal onClose={() => setCustomBuildOpen(false)} />
+        </Suspense>
       )}
     </div>
   );
