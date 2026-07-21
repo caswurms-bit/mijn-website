@@ -26,6 +26,19 @@ function isMobileViewport() {
   return window.innerWidth < 768;
 }
 
+// 'canplaythrough' garandeert alleen dat lineair afspelen vanaf de huidige
+// positie niet meer zou stallen bij het huidige downloadtempo — niet dat het
+// hele (kleine) bestand al binnen is. Scrubben springt juist vrij door de
+// hele tijdlijn heen (ook naar het einde), dus checken we voor de zekerheid
+// zelf of `buffered` al tot (bijna) het einde reikt.
+function isFullyBuffered(video: HTMLVideoElement) {
+  const duration = video.duration;
+  if (!duration || !isFinite(duration)) return false;
+  const buffered = video.buffered;
+  if (buffered.length === 0) return false;
+  return buffered.end(buffered.length - 1) >= duration - 0.25;
+}
+
 function easeScrollProgress(p: number) {
   let eased = 1 - Math.pow(1 - p, 4);
   const slowStart = 0.75;
@@ -47,6 +60,11 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [hasError, setHasError] = useState(false);
+  // Losgekoppeld van `isReady`: de sectie mag al zichtbaar zijn/faden zodra
+  // het eerste frame er staat ('loadeddata'), maar scroll mag pas de video
+  // gaan aansturen zodra er genoeg gebufferd is — anders hapert scrubbing op
+  // trage mobiele verbindingen doordat er nog op data gewacht moet worden.
+  const [canScrub, setCanScrub] = useState(false);
 
   const durationRef = useRef(0);
   const lastSeekTime = useRef(-1);
@@ -82,7 +100,9 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     const newHeight = videoHeight * ratio;
     const x = (containerWidth - newWidth) / 2;
     const verticalOffset = (mobile ? 94 : 60) * scaleAdjustment;
-    const horizontalOffset = (mobile ? -4 : 16) * scaleAdjustment;
+    // Mobiel: kleine correctie naar rechts (-4 -> 6), zoals gevraagd.
+    // Desktop-waarde (16) blijft ongewijzigd.
+    const horizontalOffset = (mobile ? 6 : 16) * scaleAdjustment;
     const y = (containerHeight - newHeight) / 2 + verticalOffset;
 
     video.style.width = `${newWidth}px`;
@@ -118,7 +138,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   };
 
   const handleScroll = () => {
-    if (!sectionRef.current || !isReady) return;
+    if (!sectionRef.current || !canScrub) return;
     const rect = sectionRef.current.getBoundingClientRect();
     let rawProgress = -rect.top / (window.innerHeight * 0.8);
     rawProgress = Math.min(1, Math.max(0, rawProgress));
@@ -136,23 +156,28 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   // de duur (nodig om currentTime te kunnen zetten — in sommige browsers
   // werkt seeken pas zodra readyState >= HAVE_METADATA). "loadeddata" geeft
   // aan dat het eerste frame daadwerkelijk gedecodeerd/te tonen is, zodat we
-  // pas dan faden i.p.v. een witte flits te tonen.
+  // pas dan faden i.p.v. een witte flits te tonen. Scrubben zelf wordt pas
+  // vrijgegeven zodra het bestand voldoende gebufferd is (zie canScrub).
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    let settled = false;
+    // Twee onafhankelijke "klaar"-vlaggen: de sectie mag al zichtbaar
+    // worden (settledReveal) ruim voordat scrubben veilig is (settledScrub).
+    let settledReveal = false;
+    let settledScrub = false;
 
     const handleLoadedMetadata = () => {
       durationRef.current = video.duration || 0;
       applyVideoTransform();
     };
     const handleLoadedData = () => {
-      settled = true;
+      settledReveal = true;
       setIsReady(true);
     };
     const handleError = () => {
-      settled = true;
+      settledReveal = true;
+      settledScrub = true;
       setHasError(true);
       setIsReady(true);
     };
@@ -167,24 +192,47 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       hasAutoPaused.current = true;
       video.pause();
     };
+    // 'canplaythrough' zegt alleen iets over lineair afspelen vanaf nu, niet
+    // over vrij kunnen scrubben naar elk punt (incl. het einde) — daarom ook
+    // 'progress' blijven volgen tot `buffered` echt tot (bijna) het einde
+    // reikt. Bij een bestand van een paar MB is dat meestal vrijwel meteen
+    // het geval na canplaythrough, maar dit dekt tragere verbindingen af.
+    const handleBufferProgress = () => {
+      if (settledScrub) return;
+      if (isFullyBuffered(video)) {
+        settledScrub = true;
+        setCanScrub(true);
+      }
+    };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('error', handleError);
     video.addEventListener('playing', handlePlaying);
+    video.addEventListener('canplaythrough', handleBufferProgress);
+    video.addEventListener('progress', handleBufferProgress);
 
     // Kan al geladen zijn (bv. uit browsercache) vóórdat dit effect draait.
     if (video.readyState >= video.HAVE_METADATA) handleLoadedMetadata();
     if (video.readyState >= video.HAVE_CURRENT_DATA) handleLoadedData();
+    if (video.readyState >= video.HAVE_ENOUGH_DATA) handleBufferProgress();
 
-    // Vangnet: geen 'loadeddata' én geen 'error' binnen LOAD_TIMEOUT_MS (bv.
-    // trage verbinding of een bron die stil blijft hangen) — val alsnog
-    // terug op de donkere achtergrond i.p.v. voor altijd onzichtbaar blijven.
+    // Vangnet, in twee delen — werkt ook als canplaythrough/progress nooit
+    // (voldoende) vuren:
+    // - geen 'loadeddata' én geen 'error' binnen LOAD_TIMEOUT_MS: val terug
+    //   op de donkere achtergrond i.p.v. voor altijd onzichtbaar blijven;
+    // - wél geladen maar nooit volledig gebufferd bevestigd: geef scrubben
+    //   alsnog vrij i.p.v. de hero permanent niet-interactief te laten.
     const timeoutId = window.setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      setHasError(true);
-      setIsReady(true);
+      if (!settledReveal) {
+        settledReveal = true;
+        setHasError(true);
+        setIsReady(true);
+      }
+      if (!settledScrub) {
+        settledScrub = true;
+        setCanScrub(true);
+      }
     }, LOAD_TIMEOUT_MS);
 
     return () => {
@@ -192,12 +240,14 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('error', handleError);
       video.removeEventListener('playing', handlePlaying);
+      video.removeEventListener('canplaythrough', handleBufferProgress);
+      video.removeEventListener('progress', handleBufferProgress);
       window.clearTimeout(timeoutId);
     };
   }, []);
 
   useEffect(() => {
-    if (isReady) {
+    if (canScrub) {
       applyVideoTransform();
       window.addEventListener('scroll', handleScroll, { passive: true });
       window.addEventListener('resize', handleResize);
@@ -208,7 +258,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       window.removeEventListener('resize', handleResize);
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [isReady]);
+  }, [canScrub]);
 
   return (
     <section ref={sectionRef} className="relative h-[160vh] bg-slate-950">
