@@ -33,19 +33,26 @@ const SEEK_MIN_DELTA = 0.01;
 // toevoegen (zie handleWheel) — voorkomt dat één extreem grote, losse delta
 // de wachtrij in één klap volpompt. De eigenlijke normalisatie van de
 // scrollsnelheid gebeurt niet meer per event maar per tijd, zie
-// MAX_DELTA_PER_FRAME: Chrome/Edge genereert bij één fysieke scrollwiel-klik
-// een reeks synthetische wheel-events achter elkaar (eigen smooth-scroll-
-// simulatie) — elk event bleef al onder deze grens, maar de SOM van zo'n
-// hele reeks (die binnen een fractie van een seconde binnenkomt, vóór er
-// een animatieframe getekend wordt) was alsnog groot.
+// WHEEL_DRAIN_FACTOR hieronder: Chrome/Edge genereert bij één fysieke
+// scrollwiel-klik een reeks synthetische wheel-events achter elkaar (eigen
+// smooth-scroll-simulatie) — elk event bleef al onder deze grens, maar de
+// SOM van zo'n hele reeks (die binnen een fractie van een seconde
+// binnenkomt, vóór er een animatieframe getekend wordt) was alsnog groot.
 const WHEEL_MAX_DELTA = 40;
-// Hoeveel van de opgehoopte wheel-delta (pendingWheelDelta) er per
-// animatieframe wordt verwerkt — losgekoppeld van hoeveel wheel-events er
-// binnenkomen. Bij 10 werd een geclampte 40px-delta al in 4 frames (~65ms
-// bij 60fps) weggewerkt — te kort om als vloeiend te voelen, oogde nog als
-// een korte sprong. Bij 2 smeert diezelfde 40px uit over ~20 frames
-// (~330ms), wat als een duidelijk vloeiende glijbeweging aanvoelt.
-const MAX_DELTA_PER_FRAME = 2;
+// Percentage van de opgehoopte wheel-delta (pendingWheelDelta) dat er per
+// animatieframe wordt afgevoerd — i.p.v. een vast aantal pixels. Een vaste
+// pixel-afvoer (bv. 2px/frame) geldt voor ALLE input, ook trackpad: die
+// voegt continu kleine beetjes toe, sneller dan een trage vaste afvoer kan
+// bijhouden, met een oplopende backlog/naijl-effect van seconden tot
+// gevolg. Een percentage-afvoer schaalt vanzelf mee met de wachtrij: bij
+// een grote Windows-sprong (backlog 40) is de eerste stap nog behoorlijk
+// groot maar neemt exponentieel af (duidelijk uitgesmeerd), terwijl bij
+// kleine, continue trackpad-toevoegingen de backlog vanzelf klein blijft
+// (de afvoer houdt gelijke tred met de input) — geen opstapeling meer.
+const WHEEL_DRAIN_FACTOR = 0.15;
+// Zet de wachtrij op exact 0 zodra 'm verwaarloosbaar klein is, anders
+// blijft animate() (via de rAF-conditie hieronder) oneindig doordraaien.
+const WHEEL_DRAIN_EPSILON = 0.5;
 
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
@@ -163,19 +170,21 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   };
 
   const animate = () => {
-    // Verwerk een vast maximum uit de opgehoopte wheel-delta per frame —
-    // losgekoppeld van hoeveel wheel-events er binnenkwamen. Chrome/Edge
-    // genereert bij één fysieke scrollwiel-klik een reeks synthetische
-    // wheel-events achter elkaar (eigen smooth-scroll-simulatie); elk event
-    // bleef al onder WHEEL_MAX_DELTA, maar de SOM van zo'n hele reeks (die
-    // binnen een fractie van een seconde binnenkomt, vóór er een
-    // animatieframe getekend wordt) was alsnog groot. Door hier per frame
-    // slechts MAX_DELTA_PER_FRAME te verwerken en de rest te laten staan
-    // voor volgende frame(s), wordt een grote burst geleidelijk uitgesmeerd.
+    // Voer een PERCENTAGE van de opgehoopte wheel-delta per frame af (zelfde
+    // soort lerp als hieronder bij currentProgress/targetProgress), i.p.v.
+    // een vast aantal pixels — dat laatste gold voor alle input gelijk, ook
+    // trackpad, die continu kleine beetjes toevoegt sneller dan een trage
+    // vaste afvoer kan bijhouden, met een oplopende backlog/naijl-effect
+    // van seconden tot gevolg. Een percentage-afvoer schaalt vanzelf mee:
+    // bij een grote Windows-sprong is de eerste stap nog behoorlijk groot
+    // maar neemt exponentieel af (duidelijk uitgesmeerd), terwijl de
+    // backlog bij kleine, continue trackpad-input vanzelf klein blijft.
     if (pendingWheelDelta.current !== 0) {
-      const sign = Math.sign(pendingWheelDelta.current);
-      const stepDelta = Math.min(Math.abs(pendingWheelDelta.current), MAX_DELTA_PER_FRAME) * sign;
+      const stepDelta = pendingWheelDelta.current * WHEEL_DRAIN_FACTOR;
       pendingWheelDelta.current -= stepDelta;
+      if (Math.abs(pendingWheelDelta.current) < WHEEL_DRAIN_EPSILON) {
+        pendingWheelDelta.current = 0;
+      }
 
       const rect = sectionRef.current?.getBoundingClientRect();
       if (rect) {
