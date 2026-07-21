@@ -85,7 +85,12 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
   const durationRef = useRef(0);
   const lastSeekTime = useRef(-1);
+  // Ruwe, ongefilterde scroll-progressie (1-op-1 met de actuele scrollpositie
+  // — bepaalt dus de totale scrollafstand/paginalengte, niet de smoothing).
   const targetProgress = useRef(0);
+  // Extra dempingslaag tussen de ruwe scroll-input en de bestaande glide
+  // hieronder — zie animate() voor waarom.
+  const smoothedTargetProgress = useRef(0);
   const currentProgress = useRef(0);
   const animationFrameId = useRef<number | null>(null);
   // iOS Safari decodeert/toont geen enkel videoframe totdat de video echt
@@ -140,21 +145,31 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   };
 
   const animate = () => {
-    // Vloeiende "glide" i.p.v. 1-op-1 met de scroll meeschieten. Verlaagd van
-    // 0.08 naar 0.04: een Windows-scrollwiel springt in grote, hortende
-    // stappen per klik (in tegenstelling tot een Mac-trackpad, die soepel/
-    // incrementeel scrollt) — dat is geen kwestie van te weinig totale
-    // scrollafstand, maar van een te harde overgang tussen twee scroll-
-    // standen. Met een lagere lerpFactor "haalt" currentProgress een
-    // plotselinge sprong in targetProgress geleidelijker in, wat ook een
-    // grote Windows-scroll-klik er vloeiend uit laat zien i.p.v. hortend.
-    const lerpFactor = 0.04;
-    const diff = targetProgress.current - currentProgress.current;
-    currentProgress.current += diff * lerpFactor;
+    // Twee gecascadeerde dempingslagen i.p.v. één, om de scroll-INPUT zelf
+    // sterker te smoothen vóórdat 'm wordt toegepast — niet enkel de
+    // uitvoer. Eén enkel lerp-stadium reageert namelijk altijd meteen (al
+    // is het maar een fractie) op een plotselinge sprong in targetProgress;
+    // bij een grote, hortende sprong (typisch voor een Windows-muiswiel,
+    // i.t.t. de soepele/incrementele input van een Mac-trackpad) is die
+    // eerste reactie zelf al merkbaar. Door de ruwe scroll-input eerst door
+    // een eigen, trage laag (smoothedTargetProgress) te halen vóór de
+    // bestaande glide (currentProgress) daar weer naartoe lerpt, ontstaat
+    // een geleidelijke S-curve i.p.v. een directe (al is het gedempte)
+    // sprong — bij de gelijkmatige, continue input van een trackpad blijft
+    // de extra laag nagenoeg onmerkbaar, omdat er dan nooit een echte
+    // "sprong" is om te dempen.
+    const inputSmoothingFactor = 0.06;
+    const glideFactor = 0.06;
+
+    const inputDiff = targetProgress.current - smoothedTargetProgress.current;
+    smoothedTargetProgress.current += inputDiff * inputSmoothingFactor;
+
+    const glideDiff = smoothedTargetProgress.current - currentProgress.current;
+    currentProgress.current += glideDiff * glideFactor;
 
     seekTo(currentProgress.current);
 
-    if (Math.abs(diff) > 0.0001) {
+    if (Math.abs(inputDiff) > 0.0001 || Math.abs(glideDiff) > 0.0001) {
       animationFrameId.current = requestAnimationFrame(animate);
     } else {
       animationFrameId.current = null;
