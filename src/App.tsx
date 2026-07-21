@@ -421,21 +421,26 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
   const build = BUILDS.find((b) => b.id === selectedModel)!;
   const gpu = getSpecValue(build.specs, 'GPU:');
 
+  const goToSelectedModel = () => {
+    window.location.href = `/cube-series?model=${selectedModel}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
+      onClick={goToSelectedModel}
       onTouchStart={() => setTouched(true)}
       onTouchEnd={() => setTimeout(() => setTouched(false), 350)}
-      className={`group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border transition-[transform,border-color,box-shadow] duration-300 flex flex-col
+      className={`group cursor-pointer bg-white rounded-2xl sm:rounded-3xl overflow-hidden border transition-[transform,border-color,box-shadow] duration-300 flex flex-col
         ${touched
           ? 'border-brand-200 shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] -translate-y-1'
           : 'border-slate-100 hover:border-brand-200 hover:shadow-[0_20px_60px_rgba(37,99,235,0.14),0_0_0_1px_rgba(37,99,235,0.1)] hover:-translate-y-1'
         }`}
     >
-      {/* Foto — blijft hetzelfde ongeacht het gekozen niveau */}
-      <div className="h-40 sm:h-56 overflow-hidden relative bg-white">
+      {/* Foto — blijft hetzelfde ongeacht het gekozen niveau, duidelijk groter dan voorheen */}
+      <div className="h-52 sm:h-72 overflow-hidden relative bg-white">
         <img
           src={starter.image[color] ?? starter.image.black}
           alt="Easy PiCi Cube Series"
@@ -448,6 +453,8 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
       <div className="p-4 sm:p-6 flex flex-col flex-1">
         <h3 className="text-base sm:text-2xl font-black text-slate-900 mb-3 sm:mb-4">Cube Series</h3>
 
+        {/* Segmented control mag niet de kaart-navigatie triggeren — stopt
+            propagation al intern per knop (zie CubeModelSelector). */}
         <CubeModelSelector selectedModel={selectedModel} onSelect={setSelectedModel} layoutId="cube-model-pill-home" />
 
         <AnimatePresence mode="wait">
@@ -469,6 +476,7 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
 
         <a
           href={`/cube-series?model=${selectedModel}`}
+          onClick={(e) => e.stopPropagation()}
           className="mt-4 sm:mt-6 w-full py-2.5 sm:py-3 bg-brand-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-1.5 sm:gap-2"
         >
           Bekijk Cube Series <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />

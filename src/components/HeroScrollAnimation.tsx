@@ -201,10 +201,10 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       const imgHeight = img.naturalHeight;
       const isMobile = window.innerWidth < 768;
       const baseRatio = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
-      // Pure cover-gedrag toont de pc te groot/uitgezoomd — op desktop
-      // verkleinen we het eindresultaat, op mobiel nog een fractie extra
-      // (subtiele correctie, desktop-waarde 0.6 blijft ongewijzigd).
-      const scaleAdjustment = isMobile ? 0.56 : 0.6;
+      // Pure cover-gedrag toont de pc te groot/uitgezoomd. Desktop: iets
+      // kleiner dan voorheen (0.6 -> 0.54) voor een rustiger, minder dominant
+      // beeld. Mobiel blijft exact 0.56 (ongewijzigd, zoals gevraagd).
+      const scaleAdjustment = isMobile ? 0.56 : 0.54;
       const ratio = baseRatio * scaleAdjustment;
       const newWidth = imgWidth * ratio;
       const newHeight = imgHeight * ratio;
@@ -212,12 +212,10 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       const dpr = window.devicePixelRatio || 1;
       // Offsets proportioneel meeschalen zodat de positionering relatief
       // t.o.v. het kleinere beeld gelijk blijft aan voorheen. Mobiel:
-      // verticalOffset ongewijzigd t.o.v. de vorige correctie (94). De
-      // horizontalOffset-geschiedenis: 6 -> -4 -> -24 -> -14 (halve
-      // terugdraai) -> nu nog een kleine stap verder naar rechts, vergelijkbaar
-      // in grootte met die laatste correctie (+10): -14 + 10 = -4.
-      // Desktop blijft ongewijzigd.
-      const verticalOffset = (isMobile ? 94 * dpr : 40 * dpr) * scaleAdjustment;
+      // verticalOffset/horizontalOffset ongewijzigd (94 / -4). Desktop:
+      // verticalOffset-basis verhoogd (40 -> 60) zodat de pc iets verder
+      // naar beneden staat, in lijn met de iets kleinere schaal.
+      const verticalOffset = (isMobile ? 94 * dpr : 60 * dpr) * scaleAdjustment;
       const horizontalOffset = (isMobile ? -4 * dpr : 16 * dpr) * scaleAdjustment;
       const y = (canvasHeight - newHeight) / 2 + verticalOffset;
 
