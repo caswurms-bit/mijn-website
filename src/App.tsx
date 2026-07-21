@@ -132,8 +132,10 @@ const BUILDS = [
   },
 ];
 
+// "Direct klaar voor gebruik" is de belangrijkste belofte en krijgt een eigen
+// prominente plek in FeaturesSection — deze 3 zijn de secundaire, ondersteunende
+// redenen en blijven in de kleinere tegel-grid.
 const FEATURES = [
-  { icon: Zap, title: 'Aansluiten en gamen', text: 'Drivers, updates en instellingen zijn al gedaan. Geen installatiegedoe, gewoon direct gamen.' },
   { icon: ShieldCheck, title: 'Eerlijke onderdelen', text: 'Elk onderdeel is gekozen op prestaties per euro — niet op marketing of een mooie doos.' },
   { icon: Wrench, title: 'Getest voor verzending', text: 'Elke pc wordt getest op temperatuur, stabiliteit en fps. Je weet exact wat je krijgt.' },
   { icon: Settings, title: 'Strak afgebouwd', text: 'Nette kabels, goede airflow en een kast om trots op te zijn. Ook van binnen klopt het.' },
@@ -224,9 +226,29 @@ const Navbar = ({ cartCount, onOpenCart }: { cartCount: number; onOpenCart: () =
 );
 
 const FeaturesSection = () => (
-  <section className="py-12 sm:py-20 px-6 bg-white relative z-30">
+  <section className="py-16 sm:py-24 px-6 bg-white relative z-30">
     <div className="max-w-7xl mx-auto">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+      {/* Belangrijkste belofte — niet als technisch lijstje, maar als
+          duidelijke, prominente uitspraak boven de ondersteunende redenen. */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="text-center max-w-2xl mx-auto mb-12 sm:mb-20"
+      >
+        <div className="inline-flex items-center gap-2 text-brand-600 font-bold text-xs sm:text-sm uppercase tracking-wider mb-3 sm:mb-4">
+          <Zap size={16} />
+          Direct klaar voor gebruik
+        </div>
+        <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3 sm:mb-4">
+          Wij doen het saaie werk.
+        </h2>
+        <p className="text-base sm:text-xl text-slate-500 leading-relaxed">
+          Windows, drivers en updates zijn al geïnstalleerd. Jij hoeft alleen nog maar te gamen.
+        </p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8">
         {FEATURES.map((feat, idx) => (
           <motion.div
             key={idx}
@@ -350,7 +372,7 @@ const BuildCard = ({
           {build.stockStatus === 'on-request' && (
             <button
               onClick={(e) => { e.stopPropagation(); onRequestBuild(build); }}
-              className="w-full py-3 bg-amber-500 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingBag size={16} />
               Bestel direct
@@ -774,7 +796,7 @@ const BuildModal = ({
               {build.stockStatus === 'on-request' && (
                 <button
                   onClick={() => { onClose(); onRequestBuild(build); }}
-                  className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <ShoppingBag size={18} /> Bestel direct
                 </button>

@@ -138,7 +138,7 @@ export default function RequestBuildModal({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-amber-500 text-white rounded-2xl font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full py-3.5 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {loading ? (
                     <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Versturen...</>
