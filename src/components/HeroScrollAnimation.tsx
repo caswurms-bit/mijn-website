@@ -312,6 +312,12 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
               autoPlay
               preload={shouldLoad ? 'auto' : 'none'}
               className="absolute block"
+              // fetchpriority is (nog) niet getypeerd op VideoHTMLAttributes in
+              // @types/react (wel op img/link/script) — via spread zetten we
+              // 'm alsnog als los DOM-attribuut. Signaleert de browser dat deze
+              // download voorrang mag krijgen boven niet-kritieke afbeeldingen
+              // verderop op de pagina.
+              {...({ fetchpriority: 'high' } as React.HTMLAttributes<HTMLVideoElement>)}
             />
           )}
         </div>

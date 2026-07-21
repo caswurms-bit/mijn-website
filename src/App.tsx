@@ -323,6 +323,7 @@ const BuildCard = ({
         <img
           src={build.image[color] ?? build.image.black}
           alt={build.name}
+          loading="lazy"
           className={
             isProductPhoto
               ? 'w-full h-full object-contain p-6 sm:p-10'
@@ -428,6 +429,7 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
         <img
           src={starter.image[color] ?? starter.image.black}
           alt="Easy PiCi Cube Series"
+          loading="lazy"
           className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
         />
       </div>
@@ -809,7 +811,7 @@ const CartPanelContent = ({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
           {cart.map((item, idx) => (
             <div key={idx} className="flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50/60">
-              <img src={item.image.black} alt={item.name} className="w-16 h-16 object-cover rounded-xl shrink-0" />
+              <img src={item.image.black} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded-xl shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-900 text-sm leading-tight">{item.name}</p>
                 <p className="text-slate-400 text-xs mt-0.5">{item.target}</p>
