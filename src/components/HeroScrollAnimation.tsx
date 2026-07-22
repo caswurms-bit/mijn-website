@@ -28,6 +28,12 @@ const SEEK_END_EPSILON = 0.05;
 // Minimale tijdsprong voordat we `video.currentTime` opnieuw zetten —
 // voorkomt overbodige seeks (en dus werk) bij subpixel scroll-updates.
 const SEEK_MIN_DELTA = 0.01;
+// animate() draait op ~60fps, maar de video zelf is 24fps — vaker seeken
+// dan dat is puur extra decodeerwerk zonder een nieuw videoframe te tonen.
+// Alleen op Windows leidde dat tot stotteren tijdens het decoderen; op Mac
+// was seekTo() juist zonder throttle perfect en met throttle minder soepel
+// — vandaar dat deze alleen op Windows wordt toegepast (zie isWindows()).
+const SEEK_THROTTLE_MS = 1000 / 24;
 
 // Veiligheidsgrens op wat één los 'wheel'-event aan pendingWheelDelta mag
 // toevoegen (zie handleWheel) — voorkomt dat één extreem grote, losse delta
@@ -60,6 +66,15 @@ const WHEEL_DRAIN_EPSILON = 0.5;
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
   return window.innerWidth < 768;
+}
+
+// Platformdetectie puur voor de seekTo-throttle hieronder (zie
+// SEEK_THROTTLE_MS) — navigator.platform is deprecated maar nog overal
+// ondersteund; navigator.userAgent als fallback voor browsers die
+// platform leeg laten.
+function isWindows() {
+  if (typeof navigator === 'undefined') return false;
+  return navigator.platform?.includes('Win') || navigator.userAgent?.includes('Win');
 }
 
 // Marge t.o.v. de exacte duur waarbinnen we het bestand als "volledig
@@ -113,6 +128,10 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
   const durationRef = useRef(0);
   const lastSeekTime = useRef(-1);
+  // Wall-clock tijdstip (performance.now()) van de laatst uitgevoerde seek —
+  // voor het throttlen van seekTo op Windows (zie SEEK_THROTTLE_MS/
+  // isWindows()), los van de waarde-gebaseerde dedup hierboven.
+  const lastSeekTimestamp = useRef(0);
   // Ruwe, ongefilterde scroll-progressie (1-op-1 met de actuele scrollpositie
   // — bepaalt dus de totale scrollafstand/paginalengte, niet de smoothing).
   const targetProgress = useRef(0);
@@ -165,6 +184,16 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     const video = videoRef.current;
     const duration = durationRef.current;
     if (!video || duration <= 0) return;
+
+    // Alleen op Windows throttlen — daar zorgt dit voor soepeler decoderen;
+    // op Mac (en overige platforms) blijft seekTo() bij elke frame lopen,
+    // zoals zonder throttle, want dat is daar juist het vloeiendst.
+    if (isWindows()) {
+      const now = performance.now();
+      if (now - lastSeekTimestamp.current < SEEK_THROTTLE_MS) return;
+      lastSeekTimestamp.current = now;
+    }
+
     const maxTime = Math.max(0, duration - SEEK_END_EPSILON);
     const targetTime = progress * maxTime;
     if (Math.abs(targetTime - lastSeekTime.current) < SEEK_MIN_DELTA) return;
