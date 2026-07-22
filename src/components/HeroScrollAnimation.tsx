@@ -28,12 +28,12 @@ const SEEK_END_EPSILON = 0.05;
 // Minimale tijdsprong voordat we `video.currentTime` opnieuw zetten —
 // voorkomt overbodige seeks (en dus werk) bij subpixel scroll-updates.
 const SEEK_MIN_DELTA = 0.01;
-// animate() draait op ~60fps, maar de video zelf is 24fps — vaker seeken
-// dan dat is puur extra decodeerwerk zonder een nieuw videoframe te tonen.
-// Alleen op Windows leidde dat tot stotteren tijdens het decoderen; op Mac
-// was seekTo() juist zonder throttle perfect en met throttle minder soepel
-// — vandaar dat deze alleen op Windows wordt toegepast (zie isWindows()).
-const SEEK_THROTTLE_MS = 1000 / 24;
+// animate() draait op ~60fps; puur op Windows leidde zo vaak seeken tot
+// stotteren tijdens het decoderen, dus daar wordt dit getemperd (zie
+// isWindows()) — Mac was zonder throttle juist perfect. 24fps (exact de
+// framerate van de video) voelde te stug/grof aan; ~40x/seconde is nog
+// steeds een duidelijke throttle t.o.v. de volle 60fps, maar minder grof.
+const SEEK_THROTTLE_MS = 1000 / 40;
 
 // Veiligheidsgrens op wat één los 'wheel'-event aan pendingWheelDelta mag
 // toevoegen (zie handleWheel) — voorkomt dat één extreem grote, losse delta
