@@ -28,11 +28,6 @@ const SEEK_END_EPSILON = 0.05;
 // Minimale tijdsprong voordat we `video.currentTime` opnieuw zetten —
 // voorkomt overbodige seeks (en dus werk) bij subpixel scroll-updates.
 const SEEK_MIN_DELTA = 0.01;
-// animate() draait op ~60fps, maar de video zelf is 24fps — vaker seeken
-// dan dat is puur extra decodeerwerk zonder dat er een nieuw videoframe te
-// zien is, en kan op Windows tot stotteren leiden. Throttle seekTo dus tot
-// maximaal ~24x per seconde, los van hoe vaak animate() zelf draait.
-const SEEK_THROTTLE_MS = 1000 / 24;
 
 // Veiligheidsgrens op wat één los 'wheel'-event aan pendingWheelDelta mag
 // toevoegen (zie handleWheel) — voorkomt dat één extreem grote, losse delta
@@ -54,7 +49,10 @@ const WHEEL_MAX_DELTA = 40;
 // groot maar neemt exponentieel af (duidelijk uitgesmeerd), terwijl bij
 // kleine, continue trackpad-toevoegingen de backlog vanzelf klein blijft
 // (de afvoer houdt gelijke tred met de input) — geen opstapeling meer.
-const WHEEL_DRAIN_FACTOR = 0.15;
+// Verlaagd van 0.15 naar 0.1 voor een net iets zachtere/geleidelijkere
+// uitsmering per stap — verandert niets aan de totale hoeveelheid af te
+// voeren delta, alleen aan hoe snel elke stap die inhaalt.
+const WHEEL_DRAIN_FACTOR = 0.1;
 // Zet de wachtrij op exact 0 zodra 'm verwaarloosbaar klein is, anders
 // blijft animate() (via de rAF-conditie hieronder) oneindig doordraaien.
 const WHEEL_DRAIN_EPSILON = 0.5;
@@ -115,10 +113,6 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
   const durationRef = useRef(0);
   const lastSeekTime = useRef(-1);
-  // Wall-clock tijdstip (performance.now()) van de laatst uitgevoerde seek —
-  // voor het throttlen van seekTo zelf (zie SEEK_THROTTLE_MS), los van de
-  // waarde-gebaseerde dedup hierboven.
-  const lastSeekTimestamp = useRef(0);
   // Ruwe, ongefilterde scroll-progressie (1-op-1 met de actuele scrollpositie
   // — bepaalt dus de totale scrollafstand/paginalengte, niet de smoothing).
   const targetProgress = useRef(0);
@@ -171,15 +165,10 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     const video = videoRef.current;
     const duration = durationRef.current;
     if (!video || duration <= 0) return;
-
-    const now = performance.now();
-    if (now - lastSeekTimestamp.current < SEEK_THROTTLE_MS) return;
-
     const maxTime = Math.max(0, duration - SEEK_END_EPSILON);
     const targetTime = progress * maxTime;
     if (Math.abs(targetTime - lastSeekTime.current) < SEEK_MIN_DELTA) return;
     lastSeekTime.current = targetTime;
-    lastSeekTimestamp.current = now;
     video.currentTime = targetTime;
   };
 
