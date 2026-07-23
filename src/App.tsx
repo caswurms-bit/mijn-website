@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import HeroScrollAnimation from './components/HeroScrollAnimation';
 import CubeSeriesPage from './pages/CubeSeriesPage';
 import EliteSeriesPage from './pages/EliteSeriesPage';
@@ -174,13 +174,13 @@ const HeroSection = () => (
         className="relative z-10 flex flex-row gap-2 sm:gap-4 justify-center"
       >
         <a
-          href="#builds"
+          href="/#builds"
           className="px-4 py-3 sm:px-8 sm:py-4 bg-brand-600 text-white rounded-full text-sm sm:text-lg font-bold hover:bg-brand-700 transition-colors shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
         >
           Bekijk Builds <ArrowRight size={16} className="sm:w-5 sm:h-5" />
         </a>
         <a
-          href="#story"
+          href="/#story"
           className="px-4 py-3 sm:px-8 sm:py-4 bg-white/10 text-white rounded-full text-sm sm:text-lg font-bold hover:bg-white/20 transition-colors whitespace-nowrap"
         >
           Ons Verhaal
@@ -193,7 +193,7 @@ const HeroSection = () => (
 const Navbar = ({ cartCount, onOpenCart }: { cartCount: number; onOpenCart: () => void }) => (
   <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-      <div className="flex items-center gap-2 sm:gap-3">
+      <a href="/" className="flex items-center gap-2 sm:gap-3">
         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-white/10 overflow-hidden">
           <img
             src="https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/logo/IMG_0541.jpg"
@@ -203,11 +203,11 @@ const Navbar = ({ cartCount, onOpenCart }: { cartCount: number; onOpenCart: () =
           />
         </div>
         <span className="text-xl sm:text-2xl font-bold tracking-tight text-white">Easy PiCi</span>
-      </div>
+      </a>
       <div className="flex items-center gap-2 sm:gap-4 md:gap-8 font-semibold text-white">
         <div className="flex items-center gap-3 sm:gap-8 text-[11px] sm:text-base uppercase sm:normal-case tracking-wider sm:tracking-normal">
-          <a href="#builds" className="hidden sm:block hover:text-brand-400 transition-colors whitespace-nowrap">Onze Pc's</a>
-          <a href="#story" className="hover:text-brand-400 transition-colors whitespace-nowrap">Ons Verhaal</a>
+          <a href="/#builds" className="hidden sm:block hover:text-brand-400 transition-colors whitespace-nowrap">Onze Pc's</a>
+          <a href="/#story" className="hover:text-brand-400 transition-colors whitespace-nowrap">Ons Verhaal</a>
         </div>
         <button
           onClick={onOpenCart}
@@ -221,7 +221,7 @@ const Navbar = ({ cartCount, onOpenCart }: { cartCount: number; onOpenCart: () =
           )}
         </button>
         <a
-          href="#builds"
+          href="/#builds"
           className="px-4 py-2 sm:px-6 sm:py-2.5 bg-brand-600 text-white text-xs sm:text-base rounded-full hover:bg-brand-700 transition-colors shadow-[0_4px_16px_rgba(37,99,235,0.35)] whitespace-nowrap"
         >
           Shop Nu
@@ -657,7 +657,7 @@ const CustomRequestSection = ({ onOpen }: { onOpen: () => void }) => (
 const Footer = () => (
   <footer className="py-10 sm:py-14 px-6 bg-slate-950 border-t border-slate-900">
     <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
+      <a href="/" className="flex items-center gap-3">
         <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
           <img
             src="https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/logo/IMG_0541.jpg"
@@ -667,7 +667,7 @@ const Footer = () => (
           />
         </div>
         <span className="text-white font-bold">Easy PiCi</span>
-      </div>
+      </a>
       <p className="text-slate-500 text-sm text-center">
         © {new Date().getFullYear()} Easy PiCi · Handgebouwde gaming pc's · Voorburg, NL
       </p>
@@ -798,7 +798,7 @@ const CartPanelContent = ({
         <h3 className="text-lg font-bold text-slate-900 mb-1">Je winkelwagen is leeg</h3>
         <p className="text-slate-400 text-sm mb-7">Voeg een build toe om te beginnen.</p>
         <a
-          href="#builds"
+          href="/#builds"
           onClick={onClose}
           className="px-6 py-2.5 bg-brand-600 text-white rounded-full font-semibold text-sm hover:bg-brand-700 transition-colors"
         >
@@ -943,6 +943,18 @@ export default function App() {
   const [customBuildOpen, setCustomBuildOpen] = useState(false);
   // Globale kleurkeuze (zwart/wit) voor de builds-sectie.
   const [buildColor, setBuildColor] = useState<'black' | 'white'>('black');
+
+  // Links als "/#builds" of "/#story" (bv. vanaf een productpagina) laden de
+  // homepage opnieuw met een hash in de URL — de browser scrollt dan zelf
+  // naar het element met dat id, maar alleen als dat element al bestaat op
+  // het moment dat de browser die scroll probeert uit te voeren. Bij een
+  // React-app is dat niet gegarandeerd, dus regelen we het hier zelf zodra
+  // de homepage klaar is met renderen.
+  useEffect(() => {
+    if (window.location.pathname !== '/' || !window.location.hash) return;
+    const id = window.location.hash.slice(1);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
   // Stripe stuurt de klant terug met ?success=true in de URL
   const params = new URLSearchParams(window.location.search);
