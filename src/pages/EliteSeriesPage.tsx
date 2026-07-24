@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { getSpecValue } from '../components/CubeModelSelector';
+import AddToCartButton from '../components/AddToCartButton';
 
 const TRUST_ITEMS = [
   'Direct klaar voor gebruik',
@@ -90,8 +91,8 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
           {/* Rechts — naam, prijs, USP, omschrijving, specs, vertrouwen, CTA */}
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-brand-400">{build.tier}</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-2 mb-3">{build.name}</h2>
-            <span className="block text-4xl sm:text-5xl font-black text-white mb-6 sm:mb-8">{build.price}</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-2 mb-2">{build.name}</h2>
+            <span className="block text-3xl sm:text-4xl font-black text-white mb-5 sm:mb-6">{build.price}</span>
 
             {/* Belangrijkste USP, prominent direct onder de prijs */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 mb-8 sm:mb-10">
@@ -133,31 +134,7 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
             </div>
 
             {/* In winkelwagen, tenzij het product niet leverbaar is */}
-            {build.stockStatus === 'in-stock' && (
-              <motion.button
-                onClick={handleAdd}
-                animate={added ? { backgroundColor: '#16a34a' } : { backgroundColor: '' }}
-                transition={{ duration: 0.2 }}
-                className="w-full py-3.5 sm:py-4 bg-brand-600 text-white rounded-2xl font-bold text-base sm:text-lg hover:bg-brand-700 transition-colors shadow-[0_8px_30px_rgba(37,99,235,0.35)] flex items-center justify-center gap-2 overflow-hidden"
-              >
-                <AnimatePresence mode="wait" initial={false}>
-                  {added ? (
-                    <motion.span key="added" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                      <CheckCircle2 size={18} /> Toegevoegd!
-                    </motion.span>
-                  ) : (
-                    <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                      <ShoppingBag size={18} /> In winkelwagen
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-            )}
-            {build.stockStatus === 'unavailable' && (
-              <button disabled className="w-full py-3.5 sm:py-4 bg-white/5 text-slate-500 rounded-2xl font-bold text-base sm:text-lg cursor-not-allowed">
-                Niet beschikbaar
-              </button>
-            )}
+            <AddToCartButton stockStatus={build.stockStatus} added={added} onClick={handleAdd} />
 
             {/* Transparantie over productfoto's — subtiel, geen aandacht trekken */}
             <div className="mt-8 sm:mt-10">
