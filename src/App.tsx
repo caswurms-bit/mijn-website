@@ -871,7 +871,33 @@ const CartPanelContent = ({
 };
 
 // --- SUCCES PAGINA ---
-const SuccessPage = () => (
+const SuccessPage = ({ cart }: { cart: any[] }) => {
+  // Google Ads "Aankoop"-conversie — vuurt eenmalig zodra deze pagina
+  // getoond wordt (Stripe stuurt de klant hier alleen na een geslaagde
+  // betaling naartoe, zie return_url in CheckoutModal.tsx).
+  useEffect(() => {
+    const total = cart.reduce((sum, item) => sum + item.priceNum, 0);
+    // Stripe hangt dit automatisch aan de return_url bij een geslaagde
+    // betaling (naast success=true) — een stabiel, uniek id per transactie.
+    const transactionId = new URLSearchParams(window.location.search).get('payment_intent') || '';
+
+    // Voorkomt dubbel tellen als deze pagina ververst of opnieuw bezocht
+    // wordt (bv. via de terug-knop) — zonder dit zou Google Ads dezelfde
+    // aankoop meerdere keren als conversie registreren.
+    const dedupeKey = transactionId ? `pici_conversion_${transactionId}` : null;
+    if (dedupeKey && localStorage.getItem(dedupeKey)) return;
+
+    window.gtag?.('event', 'conversion', {
+      send_to: 'AW-18345076370/w8G5COb07tUcEJLNzqtE',
+      value: total || 1.0,
+      currency: 'EUR',
+      transaction_id: transactionId,
+    });
+
+    if (dedupeKey) localStorage.setItem(dedupeKey, '1');
+  }, [cart]);
+
+  return (
   <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -933,7 +959,8 @@ const SuccessPage = () => (
       </div>
     </motion.div>
   </div>
-);
+  );
+};
 
 // --- APP ---
 export default function App() {
@@ -980,7 +1007,7 @@ export default function App() {
   const isSuccess = params.get('success') === 'true';
 
   // Toon de succespagina als Stripe terugkeert met success=true
-  if (isSuccess) return <><SuccessPage /><CookieConsentBanner /></>;
+  if (isSuccess) return <><SuccessPage cart={cart} /><CookieConsentBanner /></>;
 
   // Losse content-pagina's op basis van het pathname — lazy, dus met Suspense.
   const { pathname } = window.location;
