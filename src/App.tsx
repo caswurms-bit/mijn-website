@@ -705,7 +705,7 @@ const CartModal = ({
 }: {
   cart: any[];
   onClose: () => void;
-  onRemove: (id: string) => void;
+  onRemove: (cartItemId: string) => void;
   onCheckout: () => void;
 }) => {
   const total = cart.reduce((sum, item) => sum + item.priceNum, 0);
@@ -749,7 +749,7 @@ const CartPanelContent = ({
 }: {
   cart: any[];
   onClose: () => void;
-  onRemove: (id: string) => void;
+  onRemove: (cartItemId: string) => void;
   ordered: boolean;
   total: number;
   onCheckout: () => void;
@@ -810,8 +810,8 @@ const CartPanelContent = ({
       <>
         {/* Scrollable product list */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-          {cart.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50/60">
+          {cart.map((item) => (
+            <div key={item.cartItemId} className="flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50/60">
               <img src={item.image.black} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded-xl shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-900 text-sm leading-tight">{item.name}</p>
@@ -819,7 +819,7 @@ const CartPanelContent = ({
                 <p className="text-brand-600 font-black text-sm mt-1">{item.price}</p>
               </div>
               <button
-                onClick={() => onRemove(item.id)}
+                onClick={() => onRemove(item.cartItemId)}
                 className="p-2 hover:bg-red-50 text-slate-300 hover:text-red-400 rounded-xl transition-colors shrink-0"
               >
                 <Trash2 size={15} />
@@ -937,13 +937,31 @@ const SuccessPage = () => (
 
 // --- APP ---
 export default function App() {
-  const [cart, setCart] = useState<any[]>([]);
+  // Winkelwagen blijft behouden over paginanavigaties heen (deze site
+  // gebruikt volledige paginaladingen i.p.v. een client-side router, dus
+  // React-state alleen zou bij elke navigatie resetten). Lazy initializer
+  // leest 'm synchroon uit localStorage vóór de eerste render.
+  const [cart, setCart] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem('pici_cart');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [requestBuild, setRequestBuild] = useState<any>(null);
   const [customBuildOpen, setCustomBuildOpen] = useState(false);
   // Globale kleurkeuze (zwart/wit) voor de builds-sectie.
   const [buildColor, setBuildColor] = useState<'black' | 'white'>('black');
+
+  // Schrijft de winkelwagen bij elke wijziging terug naar localStorage, zodat
+  // 'm ook na een volledige paginalading (andere route, refresh) bewaard
+  // blijft.
+  useEffect(() => {
+    localStorage.setItem('pici_cart', JSON.stringify(cart));
+  }, [cart]);
 
   // Links als "/#builds" of "/#story" (bv. vanaf een productpagina) laden de
   // homepage opnieuw met een hash in de URL — de browser scrollt dan zelf
@@ -969,8 +987,13 @@ export default function App() {
   if (pathname === '/voorwaarden') return <><Suspense fallback={null}><TermsPage /></Suspense><CookieConsentBanner /></>;
   if (pathname === '/privacy') return <><Suspense fallback={null}><PrivacyPage /></Suspense><CookieConsentBanner /></>;
 
-  const addToCart = (build: any) => setCart((prev) => [...prev, build]);
-  const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
+  // Elke winkelwagen-regel krijgt een eigen, unieke cartItemId (los van
+  // build.id, dat de PRODUCTsoort aanduidt — "performance", "elite", etc.).
+  // Zonder dit unieke id zou het verwijderen van één regel per ongeluk ALLE
+  // regels van hetzelfde product verwijderen zodra iemand die build twee
+  // keer toevoegt, in plaats van alleen de aangeklikte regel.
+  const addToCart = (build: any) => setCart((prev) => [...prev, { ...build, cartItemId: crypto.randomUUID() }]);
+  const removeFromCart = (cartItemId: string) => setCart((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
 
   // Cube Series heeft een eigen productpagina met segmented control
   // (?model=starter|performance|pro), maar deelt cart/checkout/aanvraag
