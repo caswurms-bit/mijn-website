@@ -130,7 +130,7 @@ const BUILDS = [
     warranty: '3 jaar hardwaregarantie op de complete pc.',
     note: 'Onze flagship build — voor wie het maximale wil, zonder concessies.',
     stockStatus: 'in-stock',
-    deliveryText: 'Wachttijd: 7 werkdagen',
+    deliveryText: 'Verzending binnen 3 werkdagen',
     image: {
       black: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_0bc1c8f467c4a64aa6e4090fe75e32e9dr-ezgif.com-png-to-webp-converter.webp',
     },
