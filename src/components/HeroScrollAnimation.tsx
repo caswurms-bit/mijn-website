@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLenis } from 'lenis/react';
 
 // MP4 (H.264) i.p.v. WebM — Safari (iOS/macOS) ondersteunt WebM niet
 // betrouwbaar, waardoor de video daar nooit laadde en de hero onzichtbaar
@@ -28,53 +29,10 @@ const SEEK_END_EPSILON = 0.05;
 // Minimale tijdsprong voordat we `video.currentTime` opnieuw zetten —
 // voorkomt overbodige seeks (en dus werk) bij subpixel scroll-updates.
 const SEEK_MIN_DELTA = 0.01;
-// animate() draait op ~60fps; puur op Windows leidde zo vaak seeken tot
-// stotteren tijdens het decoderen, dus daar wordt dit getemperd (zie
-// isWindows()) — Mac was zonder throttle juist perfect. 24fps (exact de
-// framerate van de video) voelde te stug/grof aan; ~40x/seconde is nog
-// steeds een duidelijke throttle t.o.v. de volle 60fps, maar minder grof.
-const SEEK_THROTTLE_MS = 1000 / 40;
-
-// Veiligheidsgrens op wat één los 'wheel'-event aan pendingWheelDelta mag
-// toevoegen (zie handleWheel) — voorkomt dat één extreem grote, losse delta
-// de wachtrij in één klap volpompt. De eigenlijke normalisatie van de
-// scrollsnelheid gebeurt niet meer per event maar per tijd, zie
-// WHEEL_DRAIN_FACTOR hieronder: Chrome/Edge genereert bij één fysieke
-// scrollwiel-klik een reeks synthetische wheel-events achter elkaar (eigen
-// smooth-scroll-simulatie) — elk event bleef al onder deze grens, maar de
-// SOM van zo'n hele reeks (die binnen een fractie van een seconde
-// binnenkomt, vóór er een animatieframe getekend wordt) was alsnog groot.
-const WHEEL_MAX_DELTA = 40;
-// Percentage van de opgehoopte wheel-delta (pendingWheelDelta) dat er per
-// animatieframe wordt afgevoerd — i.p.v. een vast aantal pixels. Een vaste
-// pixel-afvoer (bv. 2px/frame) geldt voor ALLE input, ook trackpad: die
-// voegt continu kleine beetjes toe, sneller dan een trage vaste afvoer kan
-// bijhouden, met een oplopende backlog/naijl-effect van seconden tot
-// gevolg. Een percentage-afvoer schaalt vanzelf mee met de wachtrij: bij
-// een grote Windows-sprong (backlog 40) is de eerste stap nog behoorlijk
-// groot maar neemt exponentieel af (duidelijk uitgesmeerd), terwijl bij
-// kleine, continue trackpad-toevoegingen de backlog vanzelf klein blijft
-// (de afvoer houdt gelijke tred met de input) — geen opstapeling meer.
-// Verlaagd van 0.15 naar 0.1 voor een net iets zachtere/geleidelijkere
-// uitsmering per stap — verandert niets aan de totale hoeveelheid af te
-// voeren delta, alleen aan hoe snel elke stap die inhaalt.
-const WHEEL_DRAIN_FACTOR = 0.1;
-// Zet de wachtrij op exact 0 zodra 'm verwaarloosbaar klein is, anders
-// blijft animate() (via de rAF-conditie hieronder) oneindig doordraaien.
-const WHEEL_DRAIN_EPSILON = 0.5;
 
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
   return window.innerWidth < 768;
-}
-
-// Platformdetectie puur voor de seekTo-throttle hieronder (zie
-// SEEK_THROTTLE_MS) — navigator.platform is deprecated maar nog overal
-// ondersteund; navigator.userAgent als fallback voor browsers die
-// platform leeg laten.
-function isWindows() {
-  if (typeof navigator === 'undefined') return false;
-  return navigator.platform?.includes('Win') || navigator.userAgent?.includes('Win');
 }
 
 // Marge t.o.v. de exacte duur waarbinnen we het bestand als "volledig
@@ -128,18 +86,11 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
   const durationRef = useRef(0);
   const lastSeekTime = useRef(-1);
-  // Wall-clock tijdstip (performance.now()) van de laatst uitgevoerde seek —
-  // voor het throttlen van seekTo op Windows (zie SEEK_THROTTLE_MS/
-  // isWindows()), los van de waarde-gebaseerde dedup hierboven.
-  const lastSeekTimestamp = useRef(0);
   // Ruwe, ongefilterde scroll-progressie (1-op-1 met de actuele scrollpositie
   // — bepaalt dus de totale scrollafstand/paginalengte, niet de smoothing).
   const targetProgress = useRef(0);
   const currentProgress = useRef(0);
   const animationFrameId = useRef<number | null>(null);
-  // Opgehoopte, nog niet verwerkte wheel-delta (px) — handleWheel telt hier
-  // alleen bij op, animate() verwerkt er per frame een vast maximum vanaf.
-  const pendingWheelDelta = useRef(0);
   // iOS Safari decodeert/toont geen enkel videoframe totdat de video echt
   // een keer heeft gespeeld, ook al zijn metadata/loadeddata al gevuurd —
   // vandaar autoplay (mag: muted + playsInline) gevolgd door een meteen
@@ -184,16 +135,6 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     const video = videoRef.current;
     const duration = durationRef.current;
     if (!video || duration <= 0) return;
-
-    // Alleen op Windows throttlen — daar zorgt dit voor soepeler decoderen;
-    // op Mac (en overige platforms) blijft seekTo() bij elke frame lopen,
-    // zoals zonder throttle, want dat is daar juist het vloeiendst.
-    if (isWindows()) {
-      const now = performance.now();
-      if (now - lastSeekTimestamp.current < SEEK_THROTTLE_MS) return;
-      lastSeekTimestamp.current = now;
-    }
-
     const maxTime = Math.max(0, duration - SEEK_END_EPSILON);
     const targetTime = progress * maxTime;
     if (Math.abs(targetTime - lastSeekTime.current) < SEEK_MIN_DELTA) return;
@@ -202,52 +143,12 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   };
 
   const animate = () => {
-    // Voer een PERCENTAGE van de opgehoopte wheel-delta per frame af (zelfde
-    // soort lerp als hieronder bij currentProgress/targetProgress), i.p.v.
-    // een vast aantal pixels — dat laatste gold voor alle input gelijk, ook
-    // trackpad, die continu kleine beetjes toevoegt sneller dan een trage
-    // vaste afvoer kan bijhouden, met een oplopende backlog/naijl-effect
-    // van seconden tot gevolg. Een percentage-afvoer schaalt vanzelf mee:
-    // bij een grote Windows-sprong is de eerste stap nog behoorlijk groot
-    // maar neemt exponentieel af (duidelijk uitgesmeerd), terwijl de
-    // backlog bij kleine, continue trackpad-input vanzelf klein blijft.
-    if (pendingWheelDelta.current !== 0) {
-      const stepDelta = pendingWheelDelta.current * WHEEL_DRAIN_FACTOR;
-      pendingWheelDelta.current -= stepDelta;
-      if (Math.abs(pendingWheelDelta.current) < WHEEL_DRAIN_EPSILON) {
-        pendingWheelDelta.current = 0;
-      }
-
-      const rect = sectionRef.current?.getBoundingClientRect();
-      if (rect) {
-        const scrollDistance = window.innerHeight * 0.8; // zelfde afstand als in handleScroll
-        const currentRawProgress = Math.min(1, Math.max(0, -rect.top / scrollDistance));
-        const nextRawProgress = Math.min(1, Math.max(0, currentRawProgress + stepDelta / scrollDistance));
-        targetProgress.current = easeScrollProgress(nextRawProgress);
-        // TIJDELIJK: debug-logging.
-        console.log(
-          '[animate] stepDelta:', stepDelta,
-          'pendingWheelDelta na verwerking:', pendingWheelDelta.current,
-          'currentRawProgress:', currentRawProgress,
-          'nextRawProgress:', nextRawProgress
-        );
-        window.scrollBy({ top: stepDelta, left: 0, behavior: 'auto' });
-      }
-    }
-
-    // Onderscheid tussen kleine, continue scroll-updates (Mac-trackpad) en
-    // een enkele grote sprong (Windows-muiswiel-tick), puur op basis van hoe
-    // ver currentProgress nog achterloopt op targetProgress — niet via een
-    // aparte smoothing-laag die op alle input gelijk drukt (die maakte ook
-    // trackpad-scrollen trager, wat niet de bedoeling was).
-    //
-    // Bij trackpad-scrollen blijft dat gat klein, omdat elk scroll-event al
-    // een kleine stap is — dan gebruiken we SMALL_JUMP_FACTOR, ongeveer de
-    // oorspronkelijke, directe snelheid van vóór alle Windows-tuning. Bij een
-    // enkele grote muiswiel-sprong is het gat in één klap groot; dan schakelt
-    // hij naar LARGE_JUMP_FACTOR en haalt hij het gat sterk vertraagd in —
-    // dat gat krimpt daarna geleidelijk, dus zodra het weer onder de
-    // drempel zakt versnelt de laatste stukjes weer naar het normale tempo.
+    // Onderscheid tussen kleine, continue scroll-updates en een enkele grote
+    // sprong, puur op basis van hoe ver currentProgress nog achterloopt op
+    // targetProgress. Nu Lenis de scroll-input voor de hele pagina al
+    // vloeiend maakt (zie useLenis hieronder) verwacht deze situatie zich
+    // zelden voor te doen, maar de adaptieve factor blijft als extra vangnet
+    // staan voor het geval targetProgress toch in één klap ver springt.
     const LARGE_JUMP_THRESHOLD = 0.05;
     const SMALL_JUMP_FACTOR = 0.08;
     const LARGE_JUMP_FACTOR = 0.03;
@@ -258,7 +159,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
 
     seekTo(currentProgress.current);
 
-    if (Math.abs(diff) > 0.0001 || pendingWheelDelta.current !== 0) {
+    if (Math.abs(diff) > 0.0001) {
       animationFrameId.current = requestAnimationFrame(animate);
     } else {
       animationFrameId.current = null;
@@ -271,65 +172,6 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
     let rawProgress = -rect.top / (window.innerHeight * 0.8);
     rawProgress = Math.min(1, Math.max(0, rawProgress));
     targetProgress.current = easeScrollProgress(rawProgress);
-    if (animationFrameId.current === null) {
-      animationFrameId.current = requestAnimationFrame(animate);
-    }
-  };
-
-  // Het eigenlijke probleem zat niet in de output-smoothing maar in de
-  // input: op Windows springt de native scrollpositie (rect.top) zelf al in
-  // één klap ver (bv. door een OS-instelling als "één scherm per keer"),
-  // dus rawProgress in handleScroll is dan al bijna 1 vóórdat er iets te
-  // lerpen valt. Hier onderscheppen we het 'wheel'-event zelf zolang de
-  // sectie in de pinned/sticky fase zit, clampen we de stapgrootte, en
-  // sturen we de paginascroll zelf aan met die genormaliseerde stap — zo
-  // krijgt rect.top (en dus rawProgress) nooit meer de kans om in één keer
-  // ver te springen. Buiten die fase (ervoor/erna) doen we niets: scrollen
-  // blijft daar gewoon native, via handleScroll hierboven.
-  const handleWheel = (e: WheelEvent) => {
-    if (!sectionRef.current || !canScrub) return;
-    const rect = sectionRef.current.getBoundingClientRect();
-    const scrollDistance = window.innerHeight * 0.8; // zelfde afstand als in handleScroll
-    // Kleine marge (één WHEEL_MAX_DELTA breed) aan weerszijden van de exacte
-    // pinned-grenzen: zonder deze marge werd precies de tik die van buiten
-    // naar binnen de zone beweegt (of, andersom, weer terug naar binnen na
-    // het verlaten) helemaal niet onderschept — die tik mocht dan nog vrij,
-    // ongeclampt native scrollen. Op Windows bleek dat geen zeldzame
-    // eenmalige entree te zijn: elke nieuwe wheel-tik begint net buiten de
-    // strikte grens en raakte zo telkens opnieuw dit onbeschermde randgeval,
-    // wat de sprongsgewijze (~33%/~66%) voortgang veroorzaakte.
-    const inZone = rect.top <= WHEEL_MAX_DELTA && rect.top >= -scrollDistance - WHEEL_MAX_DELTA;
-    // TIJDELIJK: debug-logging om per wheel-event te zien wat handleWheel doet.
-    console.log('[handleWheel] rect.top:', rect.top, 'inZone:', inZone);
-    if (!inZone) {
-      console.log('[handleWheel] buiten zone, native scroll');
-      return;
-    }
-
-    const currentRawProgress = Math.min(1, Math.max(0, -rect.top / scrollDistance));
-    // Aan een uiteinde en verder dezelfde kant op scrollen: geef de controle
-    // terug aan de browser, zodat native scroll voorbij de hero (of terug
-    // erboven) gewoon werkt i.p.v. hier vast te blijven zitten.
-    if ((currentRawProgress >= 1 && e.deltaY > 0) || (currentRawProgress <= 0 && e.deltaY < 0)) {
-      return;
-    }
-
-    e.preventDefault();
-
-    // Accumuleren i.p.v. meteen verwerken: bij een burst synthetische
-    // sub-events (zie animate() hierboven) tellen we hier alleen op, en
-    // animate() trekt er per frame een vast maximum vanaf — losgekoppeld
-    // van hoeveel losse wheel-events er in die burst zaten.
-    const cappedDelta = Math.min(Math.abs(e.deltaY), WHEEL_MAX_DELTA) * Math.sign(e.deltaY);
-    pendingWheelDelta.current += cappedDelta;
-
-    // TIJDELIJK: debug-logging.
-    console.log(
-      '[handleWheel] deltaY:', e.deltaY,
-      'cappedDelta:', cappedDelta,
-      'pendingWheelDelta na optellen:', pendingWheelDelta.current
-    );
-
     if (animationFrameId.current === null) {
       animationFrameId.current = requestAnimationFrame(animate);
     }
@@ -455,18 +297,25 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   useEffect(() => {
     if (canScrub) {
       applyVideoTransform();
-      window.addEventListener('scroll', handleScroll, { passive: true });
       window.addEventListener('resize', handleResize);
-      // passive: false — nodig om preventDefault() te mogen aanroepen in handleWheel.
-      window.addEventListener('wheel', handleWheel, { passive: false });
       handleScroll();
     }
     return () => {
-      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('wheel', handleWheel);
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
+  }, [canScrub]);
+
+  // De video-progress volgt Lenis' eigen scroll-callback i.p.v. het native
+  // 'scroll'-event. Lenis smootht de ECHTE paginascroll (het is een globale
+  // instantie op window/document, zie main.tsx), dus rect.top hierboven in
+  // handleScroll is tegen die tijd al vloeiend bijgewerkt — de bestaande
+  // rawProgress-berekening blijft dus ongewijzigd, alleen de bron van de
+  // scroll-events verandert. Dit vervangt de vroegere handmatige wheel-
+  // event-onderschepping (die alleen binnen deze sectie werkte); Lenis
+  // regelt scroll-normalisatie nu consistent voor de hele pagina.
+  useLenis(() => {
+    handleScroll();
   }, [canScrub]);
 
   return (
