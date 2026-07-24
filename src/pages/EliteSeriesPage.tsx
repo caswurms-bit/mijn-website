@@ -35,7 +35,10 @@ export default function EliteSeriesPage({ build, onAddToCart, onRequestBuild }: 
 
   const handleAdd = () => {
     if (added) return;
-    onAddToCart(build);
+    // Elite heeft geen kleurkeuze (build.image bevat alleen 'black'), maar
+    // krijgt toch een expliciete selectedColor mee zodat elk winkelwagen-
+    // item altijd hetzelfde, voorspelbare veld heeft.
+    onAddToCart({ ...build, selectedColor: 'black' });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -131,7 +134,7 @@ export default function EliteSeriesPage({ build, onAddToCart, onRequestBuild }: 
               ))}
             </div>
 
-            {/* Bestel direct */}
+            {/* In winkelwagen / vraag aan, afhankelijk van stockStatus */}
             {build.stockStatus === 'in-stock' && (
               <motion.button
                 onClick={handleAdd}
@@ -146,7 +149,7 @@ export default function EliteSeriesPage({ build, onAddToCart, onRequestBuild }: 
                     </motion.span>
                   ) : (
                     <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                      <ShoppingBag size={18} /> Bestel direct
+                      <ShoppingBag size={18} /> In winkelwagen
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -157,7 +160,7 @@ export default function EliteSeriesPage({ build, onAddToCart, onRequestBuild }: 
                 onClick={() => onRequestBuild(build)}
                 className="w-full py-3.5 sm:py-4 bg-brand-600 text-white rounded-2xl font-bold text-base sm:text-lg hover:bg-brand-700 transition-colors shadow-[0_8px_30px_rgba(37,99,235,0.35)] flex items-center justify-center gap-2"
               >
-                <ShoppingBag size={18} /> Bestel direct
+                <ShoppingBag size={18} /> Vraag aan
               </button>
             )}
             {build.stockStatus === 'unavailable' && (

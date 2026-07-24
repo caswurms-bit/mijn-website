@@ -33,11 +33,12 @@ function PaymentForm({
     setError('');
 
     // Stripe bevestigt de iDEAL betaling en stuurt de klant door naar de bank
-    // Na de bank redirect komt de klant terug op de return_url
+    // Na de bank redirect komt de klant terug op de return_url — Stripe hangt
+    // hier zelf nog payment_intent/redirect_status etc. aan vast.
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/?success=true`,
+        return_url: `${window.location.origin}/success`,
         payment_method_data: {
           billing_details: { email },
         },
@@ -179,10 +180,10 @@ export default function CheckoutModal({
 
               <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Jouw bestelling</p>
               <div className="space-y-4 mt-3">
-                {cart.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
+                {cart.map((item) => (
+                  <div key={item.cartItemId} className="flex items-center gap-3">
                     <img
-                      src={item.image.black}
+                      src={item.image[item.selectedColor] ?? item.image.black}
                       alt={item.name}
                       className="w-12 h-12 rounded-xl object-cover shrink-0 opacity-90"
                     />

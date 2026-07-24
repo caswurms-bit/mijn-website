@@ -299,7 +299,10 @@ const BuildCard = ({
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (added) return;
-    onAddToCart(build);
+    // De geselecteerde kleur meegeven aan het winkelwagen-item — anders
+    // toont de winkelwagen altijd de zwarte foto, ongeacht welke uitvoering
+    // daadwerkelijk gekozen was.
+    onAddToCart({ ...build, selectedColor: color });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -370,7 +373,7 @@ const BuildCard = ({
                 ) : (
                   <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
                     <ShoppingBag size={16} />
-                    Bestel direct
+                    In winkelwagen
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -383,7 +386,7 @@ const BuildCard = ({
               className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingBag size={16} />
-              Bestel direct
+              Vraag aan
             </button>
           )}
 
@@ -407,13 +410,30 @@ const BuildCard = ({
 // korte omschrijving en CTA — volledige specs/voorraad/levertijd horen op de
 // productpagina, niet hier. Geen kaart-chrome (rand/schaduw): de foto en
 // generieuze witruimte dragen de sectie, niet een omkaderde box.
-const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
+const CubeSeriesOverviewCard = ({
+  color,
+  onAddToCart,
+  onRequestBuild,
+}: {
+  color: 'black' | 'white';
+  onAddToCart: (b: any) => void;
+  onRequestBuild: (b: any) => void;
+}) => {
   const [selectedModel, setSelectedModel] = useState<CubeModel>('performance');
+  const [added, setAdded] = useState(false);
   const starter = BUILDS.find((b) => b.id === 'starter')!;
   const build = BUILDS.find((b) => b.id === selectedModel)!;
 
   const goToSelectedModel = () => {
     window.location.href = `/cube-series?model=${selectedModel}`;
+  };
+
+  const handleAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (added) return;
+    onAddToCart({ ...build, selectedColor: color });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
   };
 
   return (
@@ -448,19 +468,62 @@ const CubeSeriesOverviewCard = ({ color }: { color: 'black' | 'white' }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.2 }}
-          className="mt-6 sm:mt-8"
+          className="mt-6 sm:mt-8 w-full"
         >
           <span className="block text-2xl sm:text-3xl font-black text-brand-600">{build.price}</span>
           <p className="text-sm sm:text-base text-slate-500 mt-1.5 max-w-xs mx-auto leading-relaxed">
             {build.shortDesc}
           </p>
+
+          {/* CTA knop — afhankelijk van stockStatus, zelfde patroon als de
+              Elite-kaart en de Cube Series-productpagina, zodat beide
+              homepage-kaarten dezelfde mogelijkheden bieden: bekijk details
+              én direct in de winkelwagen. */}
+          <div className="mt-5 sm:mt-6 max-w-xs mx-auto">
+            {build.stockStatus === 'in-stock' && (
+              <motion.button
+                onClick={handleAdd}
+                animate={added ? { backgroundColor: '#16a34a' } : { backgroundColor: '' }}
+                transition={{ duration: 0.2 }}
+                className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 overflow-hidden"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {added ? (
+                    <motion.span key="added" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
+                      <CheckCircle2 size={16} />
+                      Toegevoegd!
+                    </motion.span>
+                  ) : (
+                    <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
+                      <ShoppingBag size={16} />
+                      In winkelwagen
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            )}
+            {build.stockStatus === 'on-request' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRequestBuild(build); }}
+                className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <ShoppingBag size={16} />
+                Vraag aan
+              </button>
+            )}
+            {build.stockStatus === 'unavailable' && (
+              <button disabled className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-sm sm:text-base font-bold cursor-not-allowed">
+                Niet beschikbaar
+              </button>
+            )}
+          </div>
         </motion.div>
       </AnimatePresence>
 
       <a
         href={`/cube-series?model=${selectedModel}`}
         onClick={(e) => e.stopPropagation()}
-        className="mt-6 sm:mt-8 inline-flex items-center gap-2 text-base sm:text-lg font-bold text-brand-600 hover:text-brand-700 group-hover:gap-3 transition-all duration-200"
+        className="mt-5 sm:mt-6 inline-flex items-center gap-2 text-base sm:text-lg font-bold text-brand-600 hover:text-brand-700 group-hover:gap-3 transition-all duration-200"
       >
         Bekijk Cube {build.tier} <ArrowRight size={18} className="sm:w-5 sm:h-5" />
       </a>
@@ -518,7 +581,7 @@ const BuildsSection = ({
           Ruime gap i.p.v. een strakke kaartgrid — de secties staan zonder
           rand/schaduw, dus witruimte is hier de enige scheidingslijn. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16 sm:gap-20 lg:gap-24">
-        <CubeSeriesOverviewCard color={color} />
+        <CubeSeriesOverviewCard color={color} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
         {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
           <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={() => { window.location.href = '/elite-series'; }} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
         ))}
@@ -812,7 +875,7 @@ const CartPanelContent = ({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
           {cart.map((item) => (
             <div key={item.cartItemId} className="flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50/60">
-              <img src={item.image.black} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded-xl shrink-0" />
+              <img src={item.image[item.selectedColor] ?? item.image.black} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded-xl shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-900 text-sm leading-tight">{item.name}</p>
                 <p className="text-slate-400 text-xs mt-0.5">{item.target}</p>
@@ -910,28 +973,24 @@ const SuccessPage = ({ cart }: { cart: any[] }) => {
         <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
           <CheckCircle2 size={30} className="text-white" />
         </div>
-        <h1 className="text-2xl font-black">Bedankt voor je bestelling!</h1>
-        <p className="text-green-100 text-sm mt-1">Je betaling is succesvol ontvangen.</p>
+        <h1 className="text-2xl font-black">Bedankt voor je bestelling! 🎉</h1>
+        <p className="text-green-100 text-sm mt-1">We hebben je bestelling succesvol ontvangen.</p>
       </div>
 
       {/* Content */}
       <div className="px-8 py-8 space-y-6">
-        {/* Wat nu? */}
-        <div>
-          <h2 className="text-base font-black text-slate-900 mb-3">Wat gebeurt er nu?</h2>
-          <div className="space-y-3">
-            {[
-              { step: '1', text: 'Je ontvangt een bevestigingsmail met een overzicht van je bestelling en een factuur.' },
-              { step: '2', text: 'We beginnen direct met het samenstellen en bouwen van jouw pc.' },
-              { step: '3', text: 'Elke build wordt zorgvuldig getest op temperatuur, stabiliteit en prestaties.' },
-              { step: '4', text: 'Zodra je pc klaar is, sturen we hem veilig verpakt op. Levertijd: 2–7 werkdagen.' },
-            ].map(({ step, text }) => (
-              <div key={step} className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-brand-50 text-brand-600 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">{step}</span>
-                <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
-              </div>
-            ))}
-          </div>
+        {/* Extra informatie */}
+        <div className="space-y-3">
+          {[
+            'Je ontvangt binnenkort een bevestigingsmail.',
+            'Wij gaan direct aan de slag met jouw Easy PiCi.',
+            'Verwachte verzending: binnen 3 werkdagen.',
+          ].map((text) => (
+            <div key={text} className="flex items-start gap-3">
+              <CheckCircle2 size={18} className="text-brand-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
+            </div>
+          ))}
         </div>
 
         {/* Info blok */}
@@ -941,21 +1000,13 @@ const SuccessPage = ({ cart }: { cart: any[] }) => {
           en we helpen je zo snel mogelijk.
         </div>
 
-        {/* Knoppen */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <a
-            href="/"
-            className="flex-1 py-3 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 text-sm"
-          >
-            Terug naar home
-          </a>
-          <a
-            href="/#builds"
-            className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-2xl font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 text-sm"
-          >
-            Bekijk onze builds
-          </a>
-        </div>
+        {/* Knop */}
+        <a
+          href="/"
+          className="block w-full py-3 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 text-sm"
+        >
+          Terug naar home
+        </a>
       </div>
     </motion.div>
   </div>
@@ -1002,15 +1053,16 @@ export default function App() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Stripe stuurt de klant terug met ?success=true in de URL
-  const params = new URLSearchParams(window.location.search);
-  const isSuccess = params.get('success') === 'true';
-
-  // Toon de succespagina als Stripe terugkeert met success=true
-  if (isSuccess) return <><SuccessPage cart={cart} /><CookieConsentBanner /></>;
-
   // Losse content-pagina's op basis van het pathname — lazy, dus met Suspense.
   const { pathname } = window.location;
+
+  // Stripe stuurt de klant na een geslaagde betaling naar /success (zie
+  // return_url in CheckoutModal.tsx). De oude ?success=true-query-check
+  // blijft ook werken, als vangnet voor betalingen die al onderweg waren
+  // vóórdat deze route bestond (die hebben de oude return_url al vastgelegd).
+  const isSuccess = pathname === '/success' || new URLSearchParams(window.location.search).get('success') === 'true';
+  if (isSuccess) return <><SuccessPage cart={cart} /><CookieConsentBanner /></>;
+
   if (pathname === '/voorwaarden') return <><Suspense fallback={null}><TermsPage /></Suspense><CookieConsentBanner /></>;
   if (pathname === '/privacy') return <><Suspense fallback={null}><PrivacyPage /></Suspense><CookieConsentBanner /></>;
 

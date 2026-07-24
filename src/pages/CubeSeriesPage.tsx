@@ -56,7 +56,10 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
 
   const handleAdd = () => {
     if (added) return;
-    onAddToCart(build);
+    // De geselecteerde kleur meegeven aan het winkelwagen-item — anders
+    // toont de winkelwagen altijd de zwarte foto, ongeacht welke uitvoering
+    // daadwerkelijk gekozen was.
+    onAddToCart({ ...build, selectedColor: color });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -176,7 +179,7 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
                 ))}
               </div>
 
-              {/* Bestel direct */}
+              {/* In winkelwagen / vraag aan, afhankelijk van stockStatus */}
               {build.stockStatus === 'in-stock' && (
                 <motion.button
                   onClick={handleAdd}
@@ -191,7 +194,7 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
                       </motion.span>
                     ) : (
                       <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                        <ShoppingBag size={18} /> Bestel direct
+                        <ShoppingBag size={18} /> In winkelwagen
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -202,7 +205,7 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
                   onClick={() => onRequestBuild(build)}
                   className="w-full py-3.5 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
                 >
-                  <ShoppingBag size={18} /> Bestel direct
+                  <ShoppingBag size={18} /> Vraag aan
                 </button>
               )}
               {build.stockStatus === 'unavailable' && (
