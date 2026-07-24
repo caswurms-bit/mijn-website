@@ -13,6 +13,12 @@ import { X, ShieldCheck, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
 // Stripe laden met de publishable key (veilig — mag in de frontend)
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
+// In productie altijd exact dit domein voor de Stripe return_url — ongeacht
+// via welke afwijkende variant (bv. zonder www) iemand toevallig checkout
+// heeft gestart. Lokaal/preview blijft window.location.origin gebruikt zodat
+// dev/test-omgevingen naar zichzelf terugkeren i.p.v. naar de live site.
+const RETURN_ORIGIN = import.meta.env.PROD ? 'https://www.easypici.nl' : window.location.origin;
+
 // ─── Betaalformulier (binnen de Elements provider) ────────────────────────────
 function PaymentForm({
   total,
@@ -38,7 +44,7 @@ function PaymentForm({
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/success`,
+        return_url: `${RETURN_ORIGIN}/success`,
         payment_method_data: {
           billing_details: { email },
         },

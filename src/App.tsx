@@ -934,32 +934,29 @@ const CartPanelContent = ({
 };
 
 // --- SUCCES PAGINA ---
-const SuccessPage = ({ cart }: { cart: any[] }) => {
-  // Google Ads "Aankoop"-conversie — vuurt eenmalig zodra deze pagina
-  // getoond wordt (Stripe stuurt de klant hier alleen na een geslaagde
-  // betaling naartoe, zie return_url in CheckoutModal.tsx).
-  useEffect(() => {
-    const total = cart.reduce((sum, item) => sum + item.priceNum, 0);
-    // Stripe hangt dit automatisch aan de return_url bij een geslaagde
-    // betaling (naast success=true) — een stabiel, uniek id per transactie.
-    const transactionId = new URLSearchParams(window.location.search).get('payment_intent') || '';
-
-    // Voorkomt dubbel tellen als deze pagina ververst of opnieuw bezocht
-    // wordt (bv. via de terug-knop) — zonder dit zou Google Ads dezelfde
-    // aankoop meerdere keren als conversie registreren.
-    const dedupeKey = transactionId ? `pici_conversion_${transactionId}` : null;
-    if (dedupeKey && localStorage.getItem(dedupeKey)) return;
-
-    window.gtag?.('event', 'conversion', {
-      send_to: 'AW-18345076370/w8G5COb07tUcEJLNzqtE',
-      value: total || 1.0,
-      currency: 'EUR',
-      transaction_id: transactionId,
-    });
-
-    if (dedupeKey) localStorage.setItem(dedupeKey, '1');
-  }, [cart]);
-
+// Voorbereid op Google Ads Purchase-conversiemeting, maar bewust nog GEEN
+// conversie-event: het bedrag zou nu uit de lokale winkelwagen-state moeten
+// komen, wat niet betrouwbaar hoeft overeen te komen met wat Stripe
+// daadwerkelijk in rekening heeft gebracht. Zodra de echte Stripe-
+// ordergegevens (waarde, valuta) betrouwbaar beschikbaar zijn — bv. via een
+// eigen backend-call die de PaymentIntent opzoekt — kan hier eenvoudig het
+// volgende worden toegevoegd:
+//
+//   useEffect(() => {
+//     const transactionId = new URLSearchParams(window.location.search).get('payment_intent') || '';
+//     window.gtag?.('event', 'conversion', {
+//       send_to: 'AW-18345076370/w8G5COb07tUcEJLNzqtE',
+//       value: /* werkelijke orderwaarde uit Stripe */,
+//       currency: /* werkelijke valuta uit Stripe, bv. 'EUR' */,
+//       transaction_id: transactionId,
+//     });
+//   }, []);
+//
+// (transaction_id is nu al betrouwbaar beschikbaar via de payment_intent-
+// query-param die Stripe zelf aan de return_url toevoegt — zie App()
+// hieronder voor hoe redirect_status bevestigt dat de betaling ook echt
+// geslaagd is vóór deze pagina ooit getoond wordt.)
+const SuccessPage = () => {
   return (
   <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
     <motion.div
@@ -1056,12 +1053,17 @@ export default function App() {
   // Losse content-pagina's op basis van het pathname — lazy, dus met Suspense.
   const { pathname } = window.location;
 
-  // Stripe stuurt de klant na een geslaagde betaling naar /success (zie
-  // return_url in CheckoutModal.tsx). De oude ?success=true-query-check
-  // blijft ook werken, als vangnet voor betalingen die al onderweg waren
-  // vóórdat deze route bestond (die hebben de oude return_url al vastgelegd).
-  const isSuccess = pathname === '/success' || new URLSearchParams(window.location.search).get('success') === 'true';
-  if (isSuccess) return <><SuccessPage cart={cart} /><CookieConsentBanner /></>;
+  // Stripe stuurt de klant na de bank-redirect ALTIJD terug naar de
+  // return_url (/success) — ook bij een mislukte of geannuleerde betaling.
+  // Het onderscheid zit in redirect_status, die Stripe zelf toevoegt aan de
+  // return_url ('succeeded' | 'failed' | 'processing'). Alleen bij
+  // 'succeeded' tonen we de bedanktpagina; in alle andere gevallen (mislukt,
+  // geannuleerd, of rechtstreeks bezocht zonder een echte transactie) valt
+  // de rest van de routing terug op de normale homepage.
+  const cameFromStripeRedirect = pathname === '/success' || new URLSearchParams(window.location.search).get('success') === 'true';
+  const redirectStatus = new URLSearchParams(window.location.search).get('redirect_status');
+  const isSuccess = cameFromStripeRedirect && redirectStatus === 'succeeded';
+  if (isSuccess) return <><SuccessPage /><CookieConsentBanner /></>;
 
   if (pathname === '/voorwaarden') return <><Suspense fallback={null}><TermsPage /></Suspense><CookieConsentBanner /></>;
   if (pathname === '/privacy') return <><Suspense fallback={null}><PrivacyPage /></Suspense><CookieConsentBanner /></>;
