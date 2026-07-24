@@ -4,6 +4,7 @@ import CubeSeriesPage from './pages/CubeSeriesPage';
 import EliteSeriesPage from './pages/EliteSeriesPage';
 import CubeModelSelector, { type CubeModel } from './components/CubeModelSelector';
 import TrustpilotWidget from './components/TrustpilotWidget';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Settings,
@@ -961,12 +962,12 @@ export default function App() {
   const isSuccess = params.get('success') === 'true';
 
   // Toon de succespagina als Stripe terugkeert met success=true
-  if (isSuccess) return <SuccessPage />;
+  if (isSuccess) return <><SuccessPage /><CookieConsentBanner /></>;
 
   // Losse content-pagina's op basis van het pathname — lazy, dus met Suspense.
   const { pathname } = window.location;
-  if (pathname === '/voorwaarden') return <Suspense fallback={null}><TermsPage /></Suspense>;
-  if (pathname === '/privacy') return <Suspense fallback={null}><PrivacyPage /></Suspense>;
+  if (pathname === '/voorwaarden') return <><Suspense fallback={null}><TermsPage /></Suspense><CookieConsentBanner /></>;
+  if (pathname === '/privacy') return <><Suspense fallback={null}><PrivacyPage /></Suspense><CookieConsentBanner /></>;
 
   const addToCart = (build: any) => setCart((prev) => [...prev, build]);
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
@@ -1000,6 +1001,7 @@ export default function App() {
             <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
           </Suspense>
         )}
+        <CookieConsentBanner />
       </div>
     );
   }
@@ -1034,6 +1036,7 @@ export default function App() {
             <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
           </Suspense>
         )}
+        <CookieConsentBanner />
       </div>
     );
   }
@@ -1073,6 +1076,7 @@ export default function App() {
           <CustomBuildModal onClose={() => setCustomBuildOpen(false)} />
         </Suspense>
       )}
+      <CookieConsentBanner />
     </div>
   );
 }
