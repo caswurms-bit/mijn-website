@@ -13,16 +13,14 @@ const TRUST_ITEMS = [
   'Direct klaar voor gebruik',
   'Windows & drivers geïnstalleerd',
   'Professioneel gebouwd en getest',
-  'Verzending binnen 3 werkdagen',
 ];
 
 interface CubeSeriesPageProps {
   builds: any[];
   onAddToCart: (build: any) => void;
-  onRequestBuild: (build: any) => void;
 }
 
-export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: CubeSeriesPageProps) {
+export default function CubeSeriesPage({ builds, onAddToCart }: CubeSeriesPageProps) {
   const [selectedModel, setSelectedModel] = useState<CubeModel>(getModelFromUrl);
   const [color, setColor] = useState<'black' | 'white'>('black');
   const [added, setAdded] = useState(false);
@@ -171,7 +169,7 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
 
               {/* USP's — compacte vertrouwenselementen, geen fanfare */}
               <div className="mb-8 sm:mb-10 space-y-2.5">
-                {TRUST_ITEMS.map((item) => (
+                {[...TRUST_ITEMS, build.deliveryText].map((item) => (
                   <div key={item} className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-brand-600 shrink-0" />
                     <span className="text-sm sm:text-base text-slate-600">{item}</span>
@@ -179,7 +177,7 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
                 ))}
               </div>
 
-              {/* In winkelwagen / vraag aan, afhankelijk van stockStatus */}
+              {/* In winkelwagen, tenzij het product niet leverbaar is */}
               {build.stockStatus === 'in-stock' && (
                 <motion.button
                   onClick={handleAdd}
@@ -199,14 +197,6 @@ export default function CubeSeriesPage({ builds, onAddToCart, onRequestBuild }: 
                     )}
                   </AnimatePresence>
                 </motion.button>
-              )}
-              {build.stockStatus === 'on-request' && (
-                <button
-                  onClick={() => onRequestBuild(build)}
-                  className="w-full py-3.5 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <ShoppingBag size={18} /> Vraag aan
-                </button>
               )}
               {build.stockStatus === 'unavailable' && (
                 <button disabled className="w-full py-3.5 bg-slate-100 text-slate-400 rounded-2xl font-bold cursor-not-allowed">

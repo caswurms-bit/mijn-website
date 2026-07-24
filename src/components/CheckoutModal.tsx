@@ -8,7 +8,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShieldCheck, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
+import { X, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
 
 // Stripe laden met de publishable key (veilig — mag in de frontend)
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -28,6 +28,7 @@ function PaymentForm({
   const stripe = useStripe();
   const elements = useElements();
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,15 +39,16 @@ function PaymentForm({
     setLoading(true);
     setError('');
 
-    // Stripe bevestigt de iDEAL betaling en stuurt de klant door naar de bank
-    // Na de bank redirect komt de klant terug op de return_url — Stripe hangt
-    // hier zelf nog payment_intent/redirect_status etc. aan vast.
+    // Stripe bevestigt de betaling en stuurt de klant (bij een redirect-
+    // methode zoals iDEAL) door naar de bank. Na de bank redirect komt de
+    // klant terug op de return_url — Stripe hangt hier zelf nog
+    // payment_intent/redirect_status etc. aan vast.
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${RETURN_ORIGIN}/success`,
         payment_method_data: {
-          billing_details: { email },
+          billing_details: { email, name },
         },
       },
     });
@@ -60,31 +62,61 @@ function PaymentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      {/* E-mail */}
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-          E-mailadres
-        </label>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="jouw@email.nl"
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-        />
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* Contactgegevens */}
+      <div className="space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Contactgegevens</h3>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            E-mailadres
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="naam@voorbeeld.nl"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            Volledige naam
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Voor- en achternaam"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+          />
+        </div>
       </div>
 
-      {/* Stripe Payment Element — toont iDEAL bankselectie */}
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-          Betaalmethode
-        </label>
+      {/* Betaling */}
+      <div className="space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Betaling</h3>
+        <p className="text-sm text-slate-500 leading-relaxed">
+          Na het klikken op de betaalknop word je veilig doorgestuurd naar Stripe om je betaling af te ronden.
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600">iDEAL</span>
+          <span className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600">Wero</span>
+        </div>
+        {/* fields: 'never' voorkomt dat Stripe's element hier ALSNOG een
+            eigen naam/e-mail-veld toont — die zijn al hierboven verzameld
+            en worden apart meegegeven via payment_method_data. */}
         <div className="border border-slate-200 rounded-xl p-4 focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-transparent transition-all">
           <PaymentElement
             options={{
               layout: 'tabs',
+              fields: {
+                billingDetails: {
+                  name: 'never',
+                  email: 'never',
+                },
+              },
             }}
           />
         </div>
@@ -104,7 +136,7 @@ function PaymentForm({
         {loading ? (
           <>
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Verbinden met bank...
+            Verbinden met Stripe...
           </>
         ) : (
           <>
@@ -117,7 +149,6 @@ function PaymentForm({
       {/* Trust */}
       <div className="flex items-center justify-center gap-5 text-[11px] text-slate-400">
         <span className="flex items-center gap-1"><ShieldCheck size={11} /> Beveiligd door Stripe</span>
-        <span className="flex items-center gap-1"><Zap size={11} /> iDEAL betaling</span>
         <span className="flex items-center gap-1"><CheckCircle2 size={11} /> 3 jaar garantie</span>
       </div>
     </form>

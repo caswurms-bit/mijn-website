@@ -26,8 +26,6 @@ import {
 // pas binnen op het moment dat iemand daadwerkelijk gaat afrekenen, i.p.v.
 // dat Stripe's script al meekomt bij het laden van de homepage.
 const CheckoutModal = lazy(() => import('./components/CheckoutModal'));
-const RequestBuildModal = lazy(() => import('./components/RequestBuildModal'));
-const CustomBuildModal = lazy(() => import('./components/CustomBuildModal'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 
@@ -104,8 +102,8 @@ const BUILDS = [
       'Voeding: 750W 80+ Gold',
     ],
     warranty: '3 jaar hardwaregarantie op de complete pc.',
-    note: 'Op aanvraag gebouwd — zelfde kwaliteit en zorgvuldigheid als alle andere builds.',
-    stockStatus: 'on-request',
+    note: 'Direct leverbaar — zelfde kwaliteit en zorgvuldigheid als alle andere builds.',
+    stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
     image: {
       black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20zwart/product%20foto%20zwart%20.png',
@@ -131,7 +129,7 @@ const BUILDS = [
     ],
     warranty: '3 jaar hardwaregarantie op de complete pc.',
     note: 'Onze flagship build — voor wie het maximale wil, zonder concessies.',
-    stockStatus: 'on-request',
+    stockStatus: 'in-stock',
     deliveryText: 'Wachttijd: 7 werkdagen',
     image: {
       black: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_0bc1c8f467c4a64aa6e4090fe75e32e9dr-ezgif.com-png-to-webp-converter.webp',
@@ -281,14 +279,12 @@ const BuildCard = ({
   color,
   onOpenBuild,
   onAddToCart,
-  onRequestBuild,
 }: {
   build: any;
   idx: number;
   color: 'black' | 'white';
   onOpenBuild: (b: any) => void;
   onAddToCart: (b: any) => void;
-  onRequestBuild: (b: any) => void;
 }) => {
   const [added, setAdded] = useState(false);
   // Nieuwe "los product op witte/zwarte achtergrond"-foto's (starter/performance/pro)
@@ -380,16 +376,6 @@ const BuildCard = ({
             </motion.button>
           )}
 
-          {build.stockStatus === 'on-request' && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onRequestBuild(build); }}
-              className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <ShoppingBag size={16} />
-              Vraag aan
-            </button>
-          )}
-
           {build.stockStatus === 'unavailable' && (
             <button
               disabled
@@ -398,6 +384,17 @@ const BuildCard = ({
               Niet beschikbaar
             </button>
           )}
+
+          {/* Zelfde "Bekijk ..." link als de Cube Series-kaart, zodat beide
+              homepage-kaarten dezelfde affordances bieden ondanks dat de
+              hele kaart al klikbaar is. */}
+          <a
+            href="/elite-series"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-brand-600 hover:text-brand-700 transition-colors"
+          >
+            Bekijk Elite Series <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
+          </a>
         </div>
       </div>
     </motion.div>
@@ -413,11 +410,9 @@ const BuildCard = ({
 const CubeSeriesOverviewCard = ({
   color,
   onAddToCart,
-  onRequestBuild,
 }: {
   color: 'black' | 'white';
   onAddToCart: (b: any) => void;
-  onRequestBuild: (b: any) => void;
 }) => {
   const [selectedModel, setSelectedModel] = useState<CubeModel>('performance');
   const [added, setAdded] = useState(false);
@@ -502,15 +497,6 @@ const CubeSeriesOverviewCard = ({
                 </AnimatePresence>
               </motion.button>
             )}
-            {build.stockStatus === 'on-request' && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onRequestBuild(build); }}
-                className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <ShoppingBag size={16} />
-                Vraag aan
-              </button>
-            )}
             {build.stockStatus === 'unavailable' && (
               <button disabled className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-sm sm:text-base font-bold cursor-not-allowed">
                 Niet beschikbaar
@@ -535,12 +521,10 @@ const BuildsSection = ({
   color,
   onColorChange,
   onAddToCart,
-  onRequestBuild,
 }: {
   color: 'black' | 'white';
   onColorChange: (c: 'black' | 'white') => void;
   onAddToCart: (b: any) => void;
-  onRequestBuild: (b: any) => void;
 }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
@@ -581,9 +565,9 @@ const BuildsSection = ({
           Ruime gap i.p.v. een strakke kaartgrid — de secties staan zonder
           rand/schaduw, dus witruimte is hier de enige scheidingslijn. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16 sm:gap-20 lg:gap-24">
-        <CubeSeriesOverviewCard color={color} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
+        <CubeSeriesOverviewCard color={color} onAddToCart={onAddToCart} />
         {BUILDS.filter((build) => build.id === 'elite').map((build, idx) => (
-          <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={() => { window.location.href = '/elite-series'; }} onAddToCart={onAddToCart} onRequestBuild={onRequestBuild} />
+          <BuildCard key={build.id} build={build} idx={idx} color={color} onOpenBuild={() => { window.location.href = '/elite-series'; }} onAddToCart={onAddToCart} />
         ))}
       </div>
     </div>
@@ -692,32 +676,6 @@ const TrustpilotSection = () => (
   </section>
 );
 
-const CustomRequestSection = ({ onOpen }: { onOpen: () => void }) => (
-  <section className="py-16 sm:py-24 px-6 bg-white">
-    <div className="max-w-4xl mx-auto text-center">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-      >
-        <h2 className="text-3xl sm:text-5xl font-black text-slate-900 mb-4 sm:mb-6">
-          Iets speciaals in gedachten?
-        </h2>
-        <p className="text-base sm:text-xl text-slate-500 mb-8 sm:mb-10 max-w-2xl mx-auto">
-          Heb je een specifiek budget, een bepaald spel of een eigen wens? We bouwen ook volledig op maat. Stuur ons een berichtje en we denken met je mee.
-        </p>
-        <button
-          onClick={onOpen}
-          className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-full text-lg font-bold hover:bg-slate-800 transition-colors shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
-        >
-          <Mail size={20} />
-          Vraag een custom build aan
-        </button>
-      </motion.div>
-    </div>
-  </section>
-);
-
 const Footer = () => (
   <footer className="py-10 sm:py-14 px-6 bg-slate-950 border-t border-slate-900">
     <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -772,7 +730,6 @@ const CartModal = ({
   onCheckout: () => void;
 }) => {
   const total = cart.reduce((sum, item) => sum + item.priceNum, 0);
-  const [ordered] = useState(false);
 
   return (
     <AnimatePresence>
@@ -791,7 +748,7 @@ const CartModal = ({
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           className="relative sm:hidden bg-white rounded-t-3xl w-full max-h-[90vh] shadow-2xl z-10 flex flex-col"
         >
-          <CartPanelContent cart={cart} onClose={onClose} onRemove={onRemove} ordered={ordered} total={total} onCheckout={onCheckout} />
+          <CartPanelContent cart={cart} onClose={onClose} onRemove={onRemove} total={total} onCheckout={onCheckout} />
         </motion.div>
         <motion.div
           initial={{ x: '100%' }}
@@ -800,7 +757,7 @@ const CartModal = ({
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           className="relative hidden sm:flex flex-col bg-white h-full w-full max-w-md shadow-2xl z-10"
         >
-          <CartPanelContent cart={cart} onClose={onClose} onRemove={onRemove} ordered={ordered} total={total} onCheckout={onCheckout} />
+          <CartPanelContent cart={cart} onClose={onClose} onRemove={onRemove} total={total} onCheckout={onCheckout} />
         </motion.div>
       </div>
     </AnimatePresence>
@@ -808,12 +765,11 @@ const CartModal = ({
 };
 
 const CartPanelContent = ({
-  cart, onClose, onRemove, ordered, total, onCheckout,
+  cart, onClose, onRemove, total, onCheckout,
 }: {
   cart: any[];
   onClose: () => void;
   onRemove: (cartItemId: string) => void;
-  ordered: boolean;
   total: number;
   onCheckout: () => void;
 }) => {
@@ -824,7 +780,7 @@ const CartPanelContent = ({
     <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 shrink-0">
       <div>
         <h2 className="text-xl font-black text-slate-900">Winkelwagen</h2>
-        {cart.length > 0 && !ordered && (
+        {cart.length > 0 && (
           <p className="text-xs text-slate-400 mt-0.5">{cart.length} {cart.length === 1 ? 'product' : 'producten'}</p>
         )}
       </div>
@@ -836,24 +792,7 @@ const CartPanelContent = ({
       </button>
     </div>
 
-    {ordered ? (
-      /* Success state */
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
-        <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-5">
-          <CheckCircle2 size={32} className="text-green-500" />
-        </div>
-        <h3 className="text-xl font-black text-slate-900 mb-2">Aanvraag ontvangen!</h3>
-        <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
-          We nemen zo snel mogelijk contact met je op om de bestelling te bevestigen.
-        </p>
-        <button
-          onClick={onClose}
-          className="mt-8 px-6 py-2.5 bg-slate-100 text-slate-700 rounded-full font-semibold text-sm hover:bg-slate-200 transition-colors"
-        >
-          Sluiten
-        </button>
-      </div>
-    ) : cart.length === 0 ? (
+    {cart.length === 0 ? (
       /* Empty state */
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5">
@@ -908,7 +847,7 @@ const CartPanelContent = ({
             className="w-full py-3.5 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 mb-3"
           >
             <CreditCard size={18} />
-            Afrekenen met iDEAL
+            Afrekenen
           </button>
           <button
             onClick={() => {
@@ -1012,11 +951,29 @@ const SuccessPage = () => {
 
 // --- APP ---
 export default function App() {
+  // Losse content-pagina's op basis van het pathname — lazy, dus met Suspense.
+  const { pathname } = window.location;
+
+  // Stripe stuurt de klant na de bank-redirect ALTIJD terug naar de
+  // return_url (/success) — ook bij een mislukte of geannuleerde betaling.
+  // Het onderscheid zit in redirect_status, die Stripe zelf toevoegt aan de
+  // return_url ('succeeded' | 'failed' | 'processing'). Alleen bij
+  // 'succeeded' tonen we de bedanktpagina; in alle andere gevallen (mislukt,
+  // geannuleerd, of rechtstreeks bezocht zonder een echte transactie) valt
+  // de rest van de routing terug op de normale homepage.
+  const cameFromStripeRedirect = pathname === '/success' || new URLSearchParams(window.location.search).get('success') === 'true';
+  const redirectStatus = new URLSearchParams(window.location.search).get('redirect_status');
+  const isSuccess = cameFromStripeRedirect && redirectStatus === 'succeeded';
+
   // Winkelwagen blijft behouden over paginanavigaties heen (deze site
   // gebruikt volledige paginaladingen i.p.v. een client-side router, dus
   // React-state alleen zou bij elke navigatie resetten). Lazy initializer
-  // leest 'm synchroon uit localStorage vóór de eerste render.
+  // leest 'm synchroon uit localStorage vóór de eerste render. Na een
+  // geslaagde betaling is de winkelwagen afgerond en start 'm leeg — anders
+  // zou een klant bij terugkeer naar de homepage dezelfde, al afgerekende
+  // producten weer in de winkelwagen zien staan.
   const [cart, setCart] = useState<any[]>(() => {
+    if (isSuccess) return [];
     try {
       const stored = localStorage.getItem('pici_cart');
       return stored ? JSON.parse(stored) : [];
@@ -1026,8 +983,6 @@ export default function App() {
   });
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [requestBuild, setRequestBuild] = useState<any>(null);
-  const [customBuildOpen, setCustomBuildOpen] = useState(false);
   // Globale kleurkeuze (zwart/wit) voor de builds-sectie.
   const [buildColor, setBuildColor] = useState<'black' | 'white'>('black');
 
@@ -1050,19 +1005,6 @@ export default function App() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Losse content-pagina's op basis van het pathname — lazy, dus met Suspense.
-  const { pathname } = window.location;
-
-  // Stripe stuurt de klant na de bank-redirect ALTIJD terug naar de
-  // return_url (/success) — ook bij een mislukte of geannuleerde betaling.
-  // Het onderscheid zit in redirect_status, die Stripe zelf toevoegt aan de
-  // return_url ('succeeded' | 'failed' | 'processing'). Alleen bij
-  // 'succeeded' tonen we de bedanktpagina; in alle andere gevallen (mislukt,
-  // geannuleerd, of rechtstreeks bezocht zonder een echte transactie) valt
-  // de rest van de routing terug op de normale homepage.
-  const cameFromStripeRedirect = pathname === '/success' || new URLSearchParams(window.location.search).get('success') === 'true';
-  const redirectStatus = new URLSearchParams(window.location.search).get('redirect_status');
-  const isSuccess = cameFromStripeRedirect && redirectStatus === 'succeeded';
   if (isSuccess) return <><SuccessPage /><CookieConsentBanner /></>;
 
   if (pathname === '/voorwaarden') return <><Suspense fallback={null}><TermsPage /></Suspense><CookieConsentBanner /></>;
@@ -1077,13 +1019,13 @@ export default function App() {
   const removeFromCart = (cartItemId: string) => setCart((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
 
   // Cube Series heeft een eigen productpagina met segmented control
-  // (?model=starter|performance|pro), maar deelt cart/checkout/aanvraag
-  // met de rest van de site — vandaar dezelfde Navbar/Footer/modals shell.
+  // (?model=starter|performance|pro), maar deelt cart/checkout met de rest
+  // van de site — vandaar dezelfde Navbar/Footer/modals shell.
   if (pathname === '/cube-series') {
     return (
       <div className="min-h-screen bg-white">
         <Navbar cartCount={cart.length} onOpenCart={() => setCartOpen(true)} />
-        <CubeSeriesPage builds={BUILDS} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
+        <CubeSeriesPage builds={BUILDS} onAddToCart={addToCart} />
         <Footer />
         <AnimatePresence>
           {cartOpen && (
@@ -1098,11 +1040,6 @@ export default function App() {
         {checkoutOpen && (
           <Suspense fallback={null}>
             <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
-          </Suspense>
-        )}
-        {requestBuild && (
-          <Suspense fallback={null}>
-            <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
           </Suspense>
         )}
         <CookieConsentBanner />
@@ -1111,14 +1048,14 @@ export default function App() {
   }
 
   // Elite Series heeft, net als Cube Series, een eigen productpagina i.p.v.
-  // een modal — zelfde shell (Navbar/Footer/modals), zodat cart/checkout/
-  // aanvraag overal hetzelfde blijven werken.
+  // een modal — zelfde shell (Navbar/Footer/modals), zodat cart/checkout
+  // overal hetzelfde blijven werken.
   if (pathname === '/elite-series') {
     const elite = BUILDS.find((b) => b.id === 'elite')!;
     return (
       <div className="min-h-screen bg-slate-950">
         <Navbar cartCount={cart.length} onOpenCart={() => setCartOpen(true)} />
-        <EliteSeriesPage build={elite} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
+        <EliteSeriesPage build={elite} onAddToCart={addToCart} />
         <Footer />
         <AnimatePresence>
           {cartOpen && (
@@ -1133,11 +1070,6 @@ export default function App() {
         {checkoutOpen && (
           <Suspense fallback={null}>
             <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
-          </Suspense>
-        )}
-        {requestBuild && (
-          <Suspense fallback={null}>
-            <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
           </Suspense>
         )}
         <CookieConsentBanner />
@@ -1151,8 +1083,7 @@ export default function App() {
       <HeroSection />
       <FeaturesSection />
       <StorySection />
-      <BuildsSection color={buildColor} onColorChange={setBuildColor} onAddToCart={addToCart} onRequestBuild={setRequestBuild} />
-      <CustomRequestSection onOpen={() => setCustomBuildOpen(true)} />
+      <BuildsSection color={buildColor} onColorChange={setBuildColor} onAddToCart={addToCart} />
       <TrustpilotSection />
       <Footer />
       <AnimatePresence>
@@ -1168,16 +1099,6 @@ export default function App() {
       {checkoutOpen && (
         <Suspense fallback={null}>
           <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} />
-        </Suspense>
-      )}
-      {requestBuild && (
-        <Suspense fallback={null}>
-          <RequestBuildModal buildName={requestBuild.name} onClose={() => setRequestBuild(null)} />
-        </Suspense>
-      )}
-      {customBuildOpen && (
-        <Suspense fallback={null}>
-          <CustomBuildModal onClose={() => setCustomBuildOpen(false)} />
         </Suspense>
       )}
       <CookieConsentBanner />
