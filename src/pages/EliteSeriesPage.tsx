@@ -78,14 +78,17 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
           transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
           className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-start"
         >
-          {/* Links — grotere foto dan Cube Series, met zachte gloed erachter.
-              Sticky op desktop, puur CSS zodat het meebewegen strak en direct
-              aanvoelt i.p.v. vertraagd. */}
+          {/* Links — liggende (1344×768, 7:4) productfoto, met zachte gloed
+              erachter. Container volgt de foto's eigen aspect-ratio i.p.v.
+              een vaste staande hoogte — anders zou deze brede foto klein en
+              met veel lege ruimte erboven/eronder in een te hoge box komen
+              te staan. Sticky op desktop, puur CSS zodat het meebewegen
+              strak en direct aanvoelt i.p.v. vertraagd. */}
           <div className="md:sticky md:top-28">
-            <div className="h-[24rem] md:h-[34rem] lg:h-[40rem] relative">
+            <div className="aspect-[7/4] relative">
               <div className="absolute inset-0 m-auto w-3/4 h-3/4 rounded-full bg-brand-600/20 blur-3xl will-change-transform" />
               <img
-                src={build.image.black}
+                src={build.detailImage ?? build.image.black}
                 alt="Easy PiCi Elite Series"
                 className="w-full h-full object-contain relative"
               />

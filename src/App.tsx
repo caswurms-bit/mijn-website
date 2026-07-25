@@ -133,9 +133,19 @@ const BUILDS = [
     note: 'Onze flagship build — voor wie het maximale wil, zonder concessies.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
+    // black/white wijzen naar dezelfde foto (Elite heeft geen kleurkeuze),
+    // maar white moet gezet zijn zodat BuildCard's isProductPhoto-check
+    // (Boolean(build.image.white)) deze nieuwe "product foto op witte
+    // achtergrond" ook echt als zodanig behandelt — anders zou de oude
+    // sfeervolle-foto-styling (donkere gradient-overlay + object-cover) op
+    // deze duidelijk andere foto worden toegepast.
     image: {
-      black: 'https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/foto\'s%20computers/Whisk_0bc1c8f467c4a64aa6e4090fe75e32e9dr-ezgif.com-png-to-webp-converter.webp',
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
     },
+    // Losse, liggende foto specifiek voor de Elite Series-productpagina
+    // (EliteSeriesPage) — apart van de (staande) homepage-kaartfoto hierboven.
+    detailImage: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/elite%20foto%20liggend.jpg',
   },
 ];
 
@@ -197,7 +207,7 @@ const Navbar = ({ cartCount, onOpenCart }: { cartCount: number; onOpenCart: () =
       <a href="/" className="flex items-center gap-2 sm:gap-3">
         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-white/10 overflow-hidden">
           <img
-            src="https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/logo/IMG_0541.jpg"
+            src="https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/logo%20easy%20pici.jpeg"
             alt="Easy PiCi Logo"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -289,9 +299,10 @@ const BuildCard = ({
   onAddToCart: (b: any) => void;
 }) => {
   const [added, setAdded] = useState(false);
-  // Nieuwe "los product op witte/zwarte achtergrond"-foto's (starter/performance/pro)
-  // vs. de oude sfeervolle build-foto's (elite) — bepaalt of we object-contain +
-  // witte achtergrond gebruiken i.p.v. object-cover + donkere gradient-overlay.
+  // "Los product op witte achtergrond"-foto's (heeft een white-variant) vs.
+  // een sfeervolle build-foto zonder witte achtergrond — bepaalt of we
+  // object-contain + witte achtergrond gebruiken i.p.v. object-cover +
+  // donkere gradient-overlay.
   const isProductPhoto = Boolean(build.image.white);
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -743,7 +754,7 @@ const Footer = () => (
       <a href="/" className="flex items-center gap-3">
         <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
           <img
-            src="https://lnzbfjukwcfzojuiqxgm.supabase.co/storage/v1/object/public/logo/IMG_0541.jpg"
+            src="https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/logo%20easy%20pici.jpeg"
             alt="Easy PiCi Logo"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
