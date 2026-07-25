@@ -326,23 +326,41 @@ const BuildCard = ({
       onClick={() => onOpenBuild(build)}
       className="group cursor-pointer flex flex-col rounded-2xl sm:rounded-3xl border border-slate-100 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:border-slate-200 transition-shadow duration-300 p-5 sm:p-8"
     >
-      <div className={`h-72 sm:h-[28rem] overflow-hidden relative rounded-2xl sm:rounded-3xl ${isProductPhoto ? 'bg-white' : ''}`}>
+      {/* aspect-square i.p.v. een vaste (niet-vierkante) hoogte: de foto is
+          zelf vierkant, en bij een niet-passende boxverhouding laat
+          object-contain de foto met lege ruimte aan de zijkanten "zweven"
+          — de rounded-* op de <img> zelf raakt dan nooit de zichtbare
+          pixels en blijft onzichtbaar. Met een vierkante box vult de foto
+          de box precies, waardoor de afgeronde hoeken wél zichtbaar zijn. */}
+      <div className={`aspect-square overflow-hidden relative rounded-2xl sm:rounded-3xl ${isProductPhoto ? 'bg-white' : ''}`}>
         {!isProductPhoto && (
           <>
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 sm:hidden" />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/0 to-transparent z-10 hidden sm:block" />
           </>
         )}
-        <img
-          src={build.image[color] ?? build.image.black}
-          alt={build.name}
-          loading="lazy"
-          className={
-            isProductPhoto
-              ? 'w-full h-full object-contain p-6 sm:p-10 rounded-2xl sm:rounded-3xl'
-              : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
-          }
-        />
+        {isProductPhoto ? (
+          // Padding op een losse wrapper i.p.v. op de <img> zelf: anders zit
+          // er altijd een padding-brede rand tussen de <img>'s eigen
+          // doosrand (waar rounded-* op geclipt wordt) en de zichtbare foto
+          // erbinnen — waardoor de afronding nooit de foto zelf raakt en
+          // onzichtbaar blijft, ongeacht de boxverhouding.
+          <div className="w-full h-full p-6 sm:p-10">
+            <img
+              src={build.image[color] ?? build.image.black}
+              alt={build.name}
+              loading="lazy"
+              className="w-full h-full object-contain rounded-2xl sm:rounded-3xl"
+            />
+          </div>
+        ) : (
+          <img
+            src={build.image[color] ?? build.image.black}
+            alt={build.name}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        )}
         {build.badge && (
           <span className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 text-[10px] sm:text-xs font-bold text-white bg-brand-600 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.25)]">
             ⭐ {build.badge}
@@ -461,9 +479,12 @@ const CubeSeriesOverviewCard = ({
       onClick={goToSelectedModel}
       className="group cursor-pointer flex flex-col items-center text-center rounded-2xl sm:rounded-3xl border border-slate-100 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:border-slate-200 transition-shadow duration-300 p-5 sm:p-8"
     >
-      {/* Foto — blijft hetzelfde ongeacht het gekozen niveau. Groter dan Elite's
-          foto, want Cube Series is de hoofdserie en mag dat visueel uitstralen. */}
-      <div className="w-full h-72 sm:h-[28rem] relative mb-6 sm:mb-8">
+      {/* Foto — blijft hetzelfde ongeacht het gekozen niveau. aspect-square
+          i.p.v. een vaste hoogte: de foto is zelf vierkant, en bij een
+          niet-passende boxverhouding laat object-contain 'm met lege ruimte
+          aan de zijkanten "zweven" — de rounded-* op de <img> raakt dan
+          nooit de zichtbare pixels en blijft onzichtbaar. */}
+      <div className="w-full aspect-square relative mb-6 sm:mb-8">
         <img
           src={starter.image[color] ?? starter.image.black}
           alt="Easy PiCi Cube Series"
