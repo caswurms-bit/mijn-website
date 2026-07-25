@@ -5,6 +5,7 @@ import EliteSeriesPage from './pages/EliteSeriesPage';
 import CubeModelSelector, { type CubeModel } from './components/CubeModelSelector';
 import TrustpilotWidget from './components/TrustpilotWidget';
 import CookieConsentBanner from './components/CookieConsentBanner';
+import { REVIEWS } from './data/reviews';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Settings,
@@ -17,7 +18,8 @@ import {
   ShoppingBag,
   Trash2,
   CreditCard,
-  Mail
+  Mail,
+  Star
 } from 'lucide-react';
 
 // Lazy geladen: geen van deze componenten is nodig voor de eerste render van
@@ -677,10 +679,60 @@ const StorySection = () => (
   </section>
 );
 
+// Simpele sterrenrij (los van Trustpilot's eigen groene sterren, om geen
+// officiële Trustpilot-branding te suggereren bij deze handmatige reviews) —
+// gebruikt door de showcase-kaarten hieronder.
+const StarRating = ({ rating }: { rating: number }) => (
+  <div className="flex gap-0.5">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <Star
+        key={star}
+        size={14}
+        className={star <= rating ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}
+      />
+    ))}
+  </div>
+);
+
+// De Trustpilot Review Collector-widget hierboven linkt alleen naar het
+// profiel en toont zelf geen losse reviews (dat zit achter Trustpilot's
+// betaalde abonnement) — REVIEWS is daarom een handmatig bijgehouden lijst
+// (zie src/data/reviews.ts) die als losse showcase-kaarten eronder gerenderd
+// wordt, zodat widget en showcase samen één sectie vormen.
 const TrustpilotSection = () => (
   <section className="py-16 sm:py-24 px-4 sm:px-6 bg-slate-50">
     <div className="max-w-7xl mx-auto">
       <TrustpilotWidget />
+
+      {REVIEWS.length > 0 && (
+        <div className="mt-10 sm:mt-14">
+          <p className="text-center text-xs font-bold uppercase tracking-wider text-slate-400 mb-6 sm:mb-8">
+            Wat klanten zeggen
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {REVIEWS.map((review, idx) => (
+              <motion.div
+                key={`${review.name}-${review.date}`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.08 }}
+                className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col gap-3"
+              >
+                <StarRating rating={review.rating ?? 5} />
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed flex-1">{review.text}</p>
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <span className="text-sm font-bold text-slate-900">
+                    {review.name}
+                    {review.location && <span className="text-slate-400 font-normal"> · {review.location}</span>}
+                  </span>
+                  <span className="text-xs text-slate-400">{review.date}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   </section>
 );
