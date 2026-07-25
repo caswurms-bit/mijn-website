@@ -484,7 +484,7 @@ const CubeSeriesOverviewCard = ({
           niet-passende boxverhouding laat object-contain 'm met lege ruimte
           aan de zijkanten "zweven" — de rounded-* op de <img> raakt dan
           nooit de zichtbare pixels en blijft onzichtbaar. */}
-      <div className="w-full aspect-square relative mb-6 sm:mb-8">
+      <div className="w-full aspect-square relative mb-6 sm:mb-8 p-3 sm:p-4">
         <img
           src={starter.image[color] ?? starter.image.black}
           alt="Easy PiCi Cube Series"
