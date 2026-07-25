@@ -44,9 +44,13 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
 
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden">
-      {/* Gelaagde, kleur-getinte glow — subtiel premium accent, geen drukke textuur */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[50rem] h-[50rem] rounded-full bg-brand-600/10 blur-3xl" />
-      <div className="pointer-events-none absolute top-1/3 -right-40 w-[36rem] h-[36rem] rounded-full bg-brand-500/10 blur-3xl" />
+      {/* Gelaagde, kleur-getinte glow — subtiel premium accent, geen drukke
+          textuur. will-change-transform dwingt een eigen GPU-laag af zodat
+          de browser de dure blur-3xl-filter niet bij elk scroll-frame
+          opnieuw hoeft te berekenen (anders hapert scrollen op deze pagina,
+          in tegenstelling tot Cube Series die geen blur-elementen heeft). */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[50rem] h-[50rem] rounded-full bg-brand-600/10 blur-3xl will-change-transform" />
+      <div className="pointer-events-none absolute top-1/3 -right-40 w-[36rem] h-[36rem] rounded-full bg-brand-500/10 blur-3xl will-change-transform" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-32 relative z-10">
         <a
@@ -79,7 +83,7 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
               aanvoelt i.p.v. vertraagd. */}
           <div className="md:sticky md:top-28">
             <div className="h-[24rem] md:h-[34rem] lg:h-[40rem] relative">
-              <div className="absolute inset-0 m-auto w-3/4 h-3/4 rounded-full bg-brand-600/20 blur-3xl" />
+              <div className="absolute inset-0 m-auto w-3/4 h-3/4 rounded-full bg-brand-600/20 blur-3xl will-change-transform" />
               <img
                 src={build.image.black}
                 alt="Easy PiCi Elite Series"
