@@ -146,10 +146,18 @@ function PaymentForm({
         )}
       </button>
 
-      {/* Trust */}
+      {/* Trust — "3 jaar garantie" linkt door naar de garantie/retour-pagina;
+          target="_blank" zodat de klant het checkout-formulier niet kwijtraakt. */}
       <div className="flex items-center justify-center gap-5 text-[11px] text-slate-400">
         <span className="flex items-center gap-1"><ShieldCheck size={11} /> Beveiligd door Stripe</span>
-        <span className="flex items-center gap-1"><CheckCircle2 size={11} /> 3 jaar garantie</span>
+        <a
+          href="/garantie-retouren"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 hover:text-slate-600 transition-colors"
+        >
+          <CheckCircle2 size={11} /> 3 jaar garantie
+        </a>
       </div>
     </form>
   );

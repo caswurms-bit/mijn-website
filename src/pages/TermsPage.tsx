@@ -178,6 +178,10 @@ export default function TermsPage() {
               </ul>
               <p>9.5. Als U gebruik maakt van het Herroepingsrecht, wordt de Overeenkomst ontbonden. Dat geldt ook voor eventuele aanvullende Overeenkomsten. In dat geval zal de Webwinkel de betalingen die U aan de Webwinkel hebt gedaan inclusief eventuele kosten (bijvoorbeeld voor de levering) terugbetalen. Dat doet de Webwinkel in ieder geval binnen 14 dagen na de dag waarop U de in artikel 9.2. bedoelde verklaring heeft gedaan.</p>
               <p>9.6. U draagt het risico en de bewijslast voor het juist en tijdig uitoefenen van het Herroepingsrecht.</p>
+              <p>
+                Voor een praktische toelichting op garantie en het retourproces, zie onze pagina{' '}
+                <a href="/garantie-retouren" className="text-brand-600 font-semibold hover:underline">Garantie & Retouren</a>.
+              </p>
             </div>
           </section>
 

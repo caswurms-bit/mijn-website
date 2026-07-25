@@ -30,6 +30,7 @@ import {
 const CheckoutModal = lazy(() => import('./components/CheckoutModal'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const GarantiePage = lazy(() => import('./pages/GarantiePage'));
 
 // --- DATA ---
 const BUILDS = [
@@ -800,6 +801,12 @@ const Footer = () => (
           Privacy
         </a>
         <a
+          href="/garantie-retouren"
+          className="text-slate-400 hover:text-white transition-colors text-sm whitespace-nowrap"
+        >
+          Garantie & Retouren
+        </a>
+        <a
           href="mailto:info@easypici.nl"
           className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-2"
         >
@@ -1102,6 +1109,7 @@ export default function App() {
 
   if (pathname === '/voorwaarden') return <><Suspense fallback={null}><TermsPage /></Suspense><CookieConsentBanner /></>;
   if (pathname === '/privacy') return <><Suspense fallback={null}><PrivacyPage /></Suspense><CookieConsentBanner /></>;
+  if (pathname === '/garantie-retouren') return <><Suspense fallback={null}><GarantiePage /></Suspense><CookieConsentBanner /></>;
 
   // Elke winkelwagen-regel krijgt een eigen, unieke cartItemId (los van
   // build.id, dat de PRODUCTsoort aanduidt — "performance", "elite", etc.).
