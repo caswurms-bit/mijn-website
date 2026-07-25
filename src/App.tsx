@@ -140,8 +140,8 @@ const BUILDS = [
     // sfeervolle-foto-styling (donkere gradient-overlay + object-cover) op
     // deze duidelijk andere foto worden toegepast.
     image: {
-      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
-      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/product%20foto%20wit.png',
+      black: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/elite%20build%20vierkant.jpg',
+      white: 'https://zinjkdujrvtykoglpwfe.supabase.co/storage/v1/object/public/PC%20tier%201-3%20wit/elite%20build%20vierkant.jpg',
     },
     // Losse, liggende foto specifiek voor de Elite Series-productpagina
     // (EliteSeriesPage) — apart van de (staande) homepage-kaartfoto hierboven.
