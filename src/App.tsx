@@ -6,6 +6,7 @@ import CubeModelSelector, { type CubeModel } from './components/CubeModelSelecto
 import TrustpilotWidget from './components/TrustpilotWidget';
 import CookieConsentBanner from './components/CookieConsentBanner';
 import { REVIEWS } from './data/reviews';
+import { useLenis } from 'lenis/react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Settings,
@@ -1085,6 +1086,7 @@ export default function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   // Globale kleurkeuze (zwart/wit) voor de builds-sectie.
   const [buildColor, setBuildColor] = useState<'black' | 'white'>('black');
+  const lenis = useLenis();
 
   // Schrijft de winkelwagen bij elke wijziging terug naar localStorage, zodat
   // 'm ook na een volledige paginalading (andere route, refresh) bewaard
@@ -1092,6 +1094,46 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('pici_cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Vergrendelt de achtergrond-scroll zolang de checkout open staat — anders
+  // scrollt de pagina er nog gewoon doorheen met muiswiel, trackpad, touch
+  // óf toetsenbord. lenis.stop() pauzeert Lenis' eigen wheel/touch-afhandeling
+  // (die anders los van de body blijft doorwerken), en position:fixed met een
+  // top-offset blokkeert ook toetsenbord-/scrollbar-scroll — dit is tevens de
+  // enige aanpak die op iOS Safari daadwerkelijk werkt (overflow:hidden alleen
+  // is daar onvoldoende). De scrollbar-breedte wordt als padding-right
+  // gecompenseerd zodat de pagina-inhoud niet horizontaal verspringt zodra de
+  // scrollbar verdwijnt. Bij het sluiten wordt de exacte scrollpositie van
+  // vóór het openen hersteld, vóórdat Lenis weer wordt gestart — Lenis synct
+  // zijn eigen scrollwaarde bij start() met de actuele native scrollpositie,
+  // dus de volgorde hier voorkomt dat de pagina alsnog terugspringt.
+  useEffect(() => {
+    if (!checkoutOpen) return;
+
+    const scrollY = window.scrollY;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    lenis?.stop();
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.paddingRight = '';
+      window.scrollTo(0, scrollY);
+      lenis?.start();
+    };
+  }, [checkoutOpen, lenis]);
 
   // Links als "/#builds" of "/#story" (bv. vanaf een productpagina) laden de
   // homepage opnieuw met een hash in de URL — de browser scrollt dan zelf
