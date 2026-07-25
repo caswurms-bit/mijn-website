@@ -350,7 +350,16 @@ const BuildCard = ({
           {build.shortDesc}
         </p>
         <div className="mt-auto space-y-3">
-          <span className="block text-xl sm:text-2xl font-black text-brand-600">{build.price}</span>
+          {/* Prijs + korte tagline gecentreerd, zelfde styling/positionering
+              als de prijs + shortDesc op de Cube Series-overzichtstegel —
+              alleen dit blok is gecentreerd, de rest van de kaart blijft
+              links uitgelijnd. */}
+          <div className="text-center">
+            <span className="block text-2xl sm:text-3xl font-black text-brand-600">{build.price}</span>
+            <p className="text-sm sm:text-base text-slate-500 mt-1.5 max-w-xs mx-auto leading-relaxed">
+              Onze krachtigste build.
+            </p>
+          </div>
 
           {/* CTA knop — afhankelijk van stockStatus */}
           {build.stockStatus === 'in-stock' && (
