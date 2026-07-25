@@ -341,21 +341,20 @@ const BuildCard = ({
           {build.target}
         </span>
       </div>
-      <div className="pt-5 sm:pt-7 flex flex-col flex-1">
+      <div className="pt-5 sm:pt-7 flex flex-col flex-1 items-center text-center">
         <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
           build.id === 'performance' ? 'text-brand-600' : 'text-slate-400'
         }`}>
           {build.tier}
         </span>
-        <h3 className="text-lg sm:text-2xl font-black text-slate-900 mt-1 mb-1.5 sm:mb-2 tracking-tight">{build.name}</h3>
-        <p className="text-sm text-slate-500 mb-4 sm:mb-6 flex-1 leading-relaxed line-clamp-2">
+        {/* Zelfde font-size/weight/marge als de titel op de Cube Series-tegel */}
+        <h3 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1 mb-5 sm:mb-7">{build.name}</h3>
+        <p className="text-sm text-slate-500 mb-4 sm:mb-6 max-w-xs mx-auto flex-1 leading-relaxed line-clamp-2">
           {build.shortDesc}
         </p>
-        <div className="mt-auto space-y-3">
+        <div className="mt-auto w-full">
           {/* Prijs + korte tagline gecentreerd, zelfde styling/positionering
-              als de prijs + shortDesc op de Cube Series-overzichtstegel —
-              alleen dit blok is gecentreerd, de rest van de kaart blijft
-              links uitgelijnd. */}
+              als de prijs + shortDesc op de Cube Series-overzichtstegel. */}
           <div className="text-center">
             <span className="block text-2xl sm:text-3xl font-black text-brand-600">{build.price}</span>
             <p className="text-sm sm:text-base text-slate-500 mt-1.5 max-w-xs mx-auto leading-relaxed">
@@ -363,38 +362,42 @@ const BuildCard = ({
             </p>
           </div>
 
-          {/* CTA knop — afhankelijk van stockStatus */}
-          {build.stockStatus === 'in-stock' && (
-            <motion.button
-              onClick={handleAdd}
-              animate={added ? { backgroundColor: '#16a34a' } : { backgroundColor: '' }}
-              transition={{ duration: 0.2 }}
-              className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 overflow-hidden"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {added ? (
-                  <motion.span key="added" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                    <CheckCircle2 size={16} />
-                    Toegevoegd!
-                  </motion.span>
-                ) : (
-                  <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
-                    <ShoppingBag size={16} />
-                    In winkelwagen
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          )}
+          {/* CTA knop — afhankelijk van stockStatus, zelfde breedte/positie
+              (max-w-xs mx-auto) als de knop op de Cube Series-tegel i.p.v.
+              vrijwel de volledige kaartbreedte. */}
+          <div className="mt-5 sm:mt-6 max-w-xs mx-auto">
+            {build.stockStatus === 'in-stock' && (
+              <motion.button
+                onClick={handleAdd}
+                animate={added ? { backgroundColor: '#16a34a' } : { backgroundColor: '' }}
+                transition={{ duration: 0.2 }}
+                className="w-full py-3 bg-brand-600 text-white rounded-xl text-sm sm:text-base font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 overflow-hidden"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {added ? (
+                    <motion.span key="added" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
+                      <CheckCircle2 size={16} />
+                      Toegevoegd!
+                    </motion.span>
+                  ) : (
+                    <motion.span key="add" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }} className="flex items-center gap-2">
+                      <ShoppingBag size={16} />
+                      In winkelwagen
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            )}
 
-          {build.stockStatus === 'unavailable' && (
-            <button
-              disabled
-              className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-sm sm:text-base font-bold cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              Niet beschikbaar
-            </button>
-          )}
+            {build.stockStatus === 'unavailable' && (
+              <button
+                disabled
+                className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-sm sm:text-base font-bold cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                Niet beschikbaar
+              </button>
+            )}
+          </div>
 
           {/* Zelfde "Bekijk ..." link als de Cube Series-kaart, zodat beide
               homepage-kaarten dezelfde affordances bieden ondanks dat de
@@ -402,9 +405,9 @@ const BuildCard = ({
           <a
             href="/elite-series"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-brand-600 hover:text-brand-700 transition-colors"
+            className="mt-5 sm:mt-6 inline-flex items-center gap-2 text-base sm:text-lg font-bold text-brand-600 hover:text-brand-700 group-hover:gap-3 transition-all duration-200"
           >
-            Bekijk Elite Series <ArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
+            Bekijk Elite Series <ArrowRight size={18} className="sm:w-5 sm:h-5" />
           </a>
         </div>
       </div>
