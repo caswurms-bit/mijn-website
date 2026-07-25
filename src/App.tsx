@@ -345,7 +345,7 @@ const BuildCard = ({
           // doosrand (waar rounded-* op geclipt wordt) en de zichtbare foto
           // erbinnen — waardoor de afronding nooit de foto zelf raakt en
           // onzichtbaar blijft, ongeacht de boxverhouding.
-          <div className="w-full h-full p-2 sm:p-4">
+          <div className="w-full h-full">
             <img
               src={build.image[color] ?? build.image.black}
               alt={build.name}
