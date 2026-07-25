@@ -326,7 +326,7 @@ const BuildCard = ({
       onClick={() => onOpenBuild(build)}
       className="group cursor-pointer flex flex-col rounded-2xl sm:rounded-3xl border border-slate-100 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:border-slate-200 transition-shadow duration-300 p-5 sm:p-8"
     >
-      <div className={`h-64 sm:h-96 overflow-hidden relative rounded-2xl sm:rounded-3xl ${isProductPhoto ? 'bg-white' : ''}`}>
+      <div className={`h-72 sm:h-[28rem] overflow-hidden relative rounded-2xl sm:rounded-3xl ${isProductPhoto ? 'bg-white' : ''}`}>
         {!isProductPhoto && (
           <>
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 sm:hidden" />
@@ -339,7 +339,7 @@ const BuildCard = ({
           loading="lazy"
           className={
             isProductPhoto
-              ? 'w-full h-full object-contain p-6 sm:p-10'
+              ? 'w-full h-full object-contain p-6 sm:p-10 rounded-xl sm:rounded-2xl'
               : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
           }
         />
