@@ -339,7 +339,7 @@ const BuildCard = ({
           loading="lazy"
           className={
             isProductPhoto
-              ? 'w-full h-full object-contain p-6 sm:p-10 rounded-xl sm:rounded-2xl'
+              ? 'w-full h-full object-contain p-6 sm:p-10 rounded-2xl sm:rounded-3xl'
               : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
           }
         />
@@ -468,7 +468,7 @@ const CubeSeriesOverviewCard = ({
           src={starter.image[color] ?? starter.image.black}
           alt="Easy PiCi Cube Series"
           loading="lazy"
-          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+          className="w-full h-full object-contain rounded-2xl sm:rounded-3xl transition-transform duration-500 group-hover:scale-[1.02]"
         />
       </div>
 

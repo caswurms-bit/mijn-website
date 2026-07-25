@@ -124,7 +124,7 @@ export default function CubeSeriesPage({ builds, onAddToCart }: CubeSeriesPagePr
                 <img
                   src={build.image[color] ?? build.image.black}
                   alt="Easy PiCi Cube Series"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain rounded-2xl sm:rounded-3xl"
                 />
               </div>
             </div>

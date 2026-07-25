@@ -90,7 +90,7 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
               <img
                 src={build.detailImage ?? build.image.black}
                 alt="Easy PiCi Elite Series"
-                className="w-full h-full object-contain relative"
+                className="w-full h-full object-contain relative rounded-2xl sm:rounded-3xl"
               />
             </div>
           </div>
