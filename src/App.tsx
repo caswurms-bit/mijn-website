@@ -349,9 +349,6 @@ const BuildCard = ({
         </span>
         {/* Zelfde font-size/weight/marge als de titel op de Cube Series-tegel */}
         <h3 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1 mb-5 sm:mb-7">{build.name}</h3>
-        <p className="text-sm text-slate-500 mb-4 sm:mb-6 max-w-xs mx-auto flex-1 leading-relaxed line-clamp-2">
-          {build.shortDesc}
-        </p>
         <div className="mt-auto w-full">
           {/* Prijs + korte tagline gecentreerd, zelfde styling/positionering
               als de prijs + shortDesc op de Cube Series-overzichtstegel. */}
