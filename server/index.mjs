@@ -338,6 +338,45 @@ app.post('/api/create-payment-intent', async (req, res) => {
   }
 });
 
+// ─── POST /api/save-shipping-details ─────────────────────────────────────────
+// Slaat het afleveradres op de PaymentIntent op vóórdat de betaling wordt
+// bevestigd. Dit is nodig omdat de PaymentIntent al bestaat zodra de checkout
+// opent (vóór de klant zijn gegevens invult) en een metadata-update de secret
+// key vereist, wat alleen server-side kan. Flat metadata-keys (i.p.v. één
+// JSON-blob) zodat het adres ook direct leesbaar is in het Stripe-dashboard
+// en later eenvoudig programmatisch te gebruiken is voor verzending.
+app.post('/api/save-shipping-details', async (req, res) => {
+  const { paymentIntentId, email, firstName, lastName, street, houseNumber, addition, postalCode, city, country } = req.body || {};
+
+  if (!paymentIntentId || !paymentIntentId.startsWith('pi_')) {
+    return res.status(400).json({ error: 'Ongeldige paymentIntentId.' });
+  }
+  if (!firstName || !lastName || !street || !houseNumber || !postalCode || !city) {
+    return res.status(400).json({ error: 'Adresgegevens ontbreken.' });
+  }
+
+  try {
+    await stripe.paymentIntents.update(paymentIntentId, {
+      metadata: {
+        shipping_first_name: firstName,
+        shipping_last_name: lastName,
+        shipping_street: street,
+        shipping_house_number: houseNumber,
+        shipping_addition: addition || '',
+        shipping_postal_code: postalCode,
+        shipping_city: city,
+        shipping_country: country || 'NL',
+        shipping_email: email || '',
+      },
+    });
+    console.log(`✅ Afleveradres opgeslagen op ${paymentIntentId}`);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('❌ Opslaan afleveradres mislukt:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ─── POST /api/webhooks/stripe ────────────────────────────────────────────────
 // Stripe stuurt dit event nadat de betaling geslaagd is.
 // Lokaal testen: stripe listen --forward-to localhost:3001/api/webhooks/stripe
@@ -411,18 +450,36 @@ app.post('/api/webhooks/stripe', async (req, res) => {
         ? await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
         : null;
       const billingDetails = paymentMethod?.billing_details;
+      const meta = paymentIntent.metadata || {};
 
-      const customerName = billingDetails?.name || 'Klant';
-      const customerEmail = billingDetails?.email;
-      const stripeAddress = billingDetails?.address;
-      const address = stripeAddress
-        ? {
-            name: customerName,
-            line1: [stripeAddress.line1, stripeAddress.line2].filter(Boolean).join(' '),
-            postalCode: stripeAddress.postal_code,
-            city: stripeAddress.city,
-          }
-        : null;
+      // Voorkeur voor het adres dat de klant via het checkout-formulier heeft
+      // ingevuld (/api/save-shipping-details, met losse straat/huisnummer/
+      // toevoeging) — dit is structureller en betrouwbaarder dan wat Stripe
+      // zelf eventueel aan billing_details.address hangt. Fallback op
+      // billing_details voor eventuele oudere/edge-case betalingen.
+      const hasShippingMeta = Boolean(meta.shipping_street && meta.shipping_city);
+      const customerName = hasShippingMeta
+        ? `${meta.shipping_first_name || ''} ${meta.shipping_last_name || ''}`.trim()
+        : billingDetails?.name || 'Klant';
+      const customerEmail = (hasShippingMeta && meta.shipping_email) || billingDetails?.email;
+
+      let address = null;
+      if (hasShippingMeta) {
+        address = {
+          name: customerName,
+          line1: `${meta.shipping_street} ${meta.shipping_house_number}${meta.shipping_addition ? ' ' + meta.shipping_addition : ''}`.trim(),
+          postalCode: meta.shipping_postal_code,
+          city: meta.shipping_city,
+        };
+      } else if (billingDetails?.address) {
+        const stripeAddress = billingDetails.address;
+        address = {
+          name: customerName,
+          line1: [stripeAddress.line1, stripeAddress.line2].filter(Boolean).join(' '),
+          postalCode: stripeAddress.postal_code,
+          city: stripeAddress.city,
+        };
+      }
 
       const orderNumber = paymentIntent.id.slice(-8).toUpperCase();
       const totalAmount = Math.round(paymentIntent.amount / 100);

@@ -22,13 +22,21 @@ const RETURN_ORIGIN = import.meta.env.PROD ? 'https://www.easypici.nl' : window.
 // ─── Betaalformulier (binnen de Elements provider) ────────────────────────────
 function PaymentForm({
   total,
+  clientSecret,
 }: {
   total: number;
+  clientSecret: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [street, setStreet] = useState('');
+  const [houseNumber, setHouseNumber] = useState('');
+  const [addition, setAddition] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [city, setCity] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -39,6 +47,30 @@ function PaymentForm({
     setLoading(true);
     setError('');
 
+    const fullName = `${firstName} ${lastName}`.trim();
+    const line1 = `${street} ${houseNumber}${addition ? ' ' + addition : ''}`.trim();
+
+    // De Payment Intent is al aangemaakt zodra deze modal opende (vóórdat de
+    // klant zijn gegevens heeft ingevuld) — een metadata-update vereist de
+    // secret key en kan dus alleen server-side, dus syncen we het adres apart
+    // vóórdat de betaling wordt bevestigd. Dit blokkeert de betaling bij een
+    // fout, zodat een bestelling nooit zonder afleveradres kan slagen.
+    const paymentIntentId = clientSecret.split('_secret_')[0];
+    try {
+      const res = await fetch('https://api.easypici.nl/api/save-shipping-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentIntentId, email, firstName, lastName, street, houseNumber, addition, postalCode, city, country: 'NL',
+        }),
+      });
+      if (!res.ok) throw new Error('save-shipping-details failed');
+    } catch {
+      setError('Kon je gegevens niet opslaan. Controleer je internetverbinding en probeer opnieuw.');
+      setLoading(false);
+      return;
+    }
+
     // Stripe bevestigt de betaling en stuurt de klant (bij een redirect-
     // methode zoals iDEAL) door naar de bank. Na de bank redirect komt de
     // klant terug op de return_url — Stripe hangt hier zelf nog
@@ -48,7 +80,11 @@ function PaymentForm({
       confirmParams: {
         return_url: `${RETURN_ORIGIN}/success`,
         payment_method_data: {
-          billing_details: { email, name },
+          billing_details: {
+            email,
+            name: fullName,
+            address: { line1, postal_code: postalCode, city, country: 'NL' },
+          },
         },
       },
     });
@@ -61,36 +97,118 @@ function PaymentForm({
     setLoading(false);
   };
 
+  const inputClass = 'w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all';
+  const labelClass = 'block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2';
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* Contactgegevens */}
       <div className="space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Contactgegevens</h3>
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            E-mailadres
-          </label>
+          <label className={labelClass}>E-mailadres</label>
           <input
             type="email"
             required
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="naam@voorbeeld.nl"
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+            className={inputClass}
           />
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Voornaam</label>
+            <input
+              type="text"
+              required
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              placeholder="Voornaam"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Achternaam</label>
+            <input
+              type="text"
+              required
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
+              placeholder="Achternaam"
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Afleveradres — verplicht, gaat mee met de Payment Intent zodat de
+          bestelling nooit zonder afleveradres kan worden afgerond. */}
+      <div className="space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Afleveradres</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="col-span-2">
+            <label className={labelClass}>Straat</label>
+            <input
+              type="text"
+              required
+              value={street}
+              onChange={e => setStreet(e.target.value)}
+              placeholder="Straatnaam"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Huisnummer</label>
+            <input
+              type="text"
+              required
+              value={houseNumber}
+              onChange={e => setHouseNumber(e.target.value)}
+              placeholder="12"
+              className={inputClass}
+            />
+          </div>
+        </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            Volledige naam
-          </label>
+          <label className={labelClass}>Toevoeging <span className="normal-case font-normal text-slate-400">(optioneel)</span></label>
           <input
             type="text"
-            required
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Voor- en achternaam"
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+            value={addition}
+            onChange={e => setAddition(e.target.value)}
+            placeholder="A, bis, etc."
+            className={inputClass}
           />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Postcode</label>
+            <input
+              type="text"
+              required
+              value={postalCode}
+              onChange={e => setPostalCode(e.target.value)}
+              placeholder="1234 AB"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Plaats</label>
+            <input
+              type="text"
+              required
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              placeholder="Voorburg"
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div>
+          <label className={labelClass}>Land</label>
+          <div className="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 text-slate-500 text-sm">
+            Nederland
+          </div>
         </div>
       </div>
 
@@ -104,9 +222,10 @@ function PaymentForm({
           <span className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600">iDEAL</span>
           <span className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600">Wero</span>
         </div>
-        {/* fields: 'never' voorkomt dat Stripe's element hier ALSNOG een
-            eigen naam/e-mail-veld toont — die zijn al hierboven verzameld
-            en worden apart meegegeven via payment_method_data. */}
+        {/* fields: 'never' voorkomt dat Stripe's element hier ALSNOG eigen
+            naam/e-mail/adresvelden toont — die zijn al hierboven verzameld
+            (Contactgegevens + Afleveradres) en worden apart meegegeven via
+            payment_method_data. */}
         <div className="border border-slate-200 rounded-xl p-4 focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-transparent transition-all">
           <PaymentElement
             options={{
@@ -115,6 +234,7 @@ function PaymentForm({
                 billingDetails: {
                   name: 'never',
                   email: 'never',
+                  address: 'never',
                 },
               },
             }}
@@ -286,7 +406,7 @@ export default function CheckoutModal({
                   locale: 'nl',
                 }}
               >
-                <PaymentForm total={total} />
+                <PaymentForm total={total} clientSecret={clientSecret} />
               </Elements>
             )}
           </div>
