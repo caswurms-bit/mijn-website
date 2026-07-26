@@ -17,6 +17,10 @@ import cors from 'cors';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { buildConfirmationEmail } from './emailTemplate.mjs';
+import { sendMail as sendMailViaResend } from './lib/resend.mjs';
+import { buildOrderConfirmationEmail } from './emails/orderConfirmation.mjs';
+import { buildNewOrderEmail } from './emails/newOrderNotification.mjs';
+import { buildContactNotificationEmail, buildContactAutoReplyEmail } from './emails/contact.mjs';
 
 // ─── Valideer keys bij opstarten ─────────────────────────────────────────────
 const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;
@@ -268,6 +272,36 @@ app.post('/api/request-custom', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── POST /api/contact ────────────────────────────────────────────────────────
+// Bericht via het contactformulier op de website: notificatie naar Easy PiCi
+// zelf + een automatische ontvangstbevestiging naar de afzender.
+app.post('/api/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body || {};
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Naam, e-mail en bericht zijn verplicht.' });
+  }
+
+  console.log(`\n✉️  Contactformulier: ${name} (${email})`);
+
+  const sentAt = new Date();
+
+  try {
+    const notification = buildContactNotificationEmail({ name, email, subject, message, sentAt });
+    await sendMailViaResend({ to: 'info@easypici.nl', subject: notification.subject, html: notification.html, text: notification.text });
+  } catch (err) {
+    console.error('❌ Contact-notificatie mislukt:', err.message);
+  }
+
+  try {
+    const autoReply = buildContactAutoReplyEmail({ name });
+    await sendMailViaResend({ to: email, subject: autoReply.subject, html: autoReply.html, text: autoReply.text });
+  } catch (err) {
+    console.error('❌ Automatische ontvangstbevestiging mislukt:', err.message);
+  }
+
+  res.json({ ok: true });
+});
+
 // ─── POST /api/create-payment-intent ─────────────────────────────────────────
 // Maakt een PaymentIntent aan voor iDEAL betaling (on-site Elements checkout)
 app.post('/api/create-payment-intent', async (req, res) => {
@@ -288,7 +322,10 @@ app.post('/api/create-payment-intent', async (req, res) => {
       currency: 'eur',
       payment_method_types: ['ideal'],
       metadata: {
-        items: JSON.stringify(items.map(i => ({ name: i.name, price: i.priceNum }))),
+        // tier/color zitten erbij zodat de order-e-mails na de webhook
+        // "Uitvoering" en "Kleur" per product kunnen tonen zonder de
+        // checkout zelf aan te hoeven passen.
+        items: JSON.stringify(items.map(i => ({ name: i.name, tier: i.tier, color: i.selectedColor, price: i.priceNum }))),
       },
     });
 
@@ -349,6 +386,76 @@ app.post('/api/webhooks/stripe', async (req, res) => {
       }
     } else {
       console.log('ℹ️  Resend niet geconfigureerd — e-mail overgeslagen.');
+    }
+  }
+
+  // De daadwerkelijk actieve betaalflow (embedded Payment Element op de
+  // productpagina's) maakt een PaymentIntent aan via
+  // /api/create-payment-intent, geen Checkout Session — checkout.session
+  // .completed hierboven vuurt dus in de praktijk nooit. Dit is het event
+  // dat wél afgaat na een geslaagde betaling.
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+
+    // Idempotency: Stripe kan hetzelfde event meer dan één keer afleveren
+    // (bv. na een timeout of herstart). De metadata-vlag leeft op Stripe
+    // zelf, dus blijft betrouwbaar ook als deze server herstart — geen
+    // aparte database nodig voor deze simpele check.
+    if (paymentIntent.metadata?.confirmation_email_sent === 'true') {
+      console.log(`ℹ️  PaymentIntent ${paymentIntent.id} al eerder verwerkt — sla over.`);
+      return res.json({ received: true });
+    }
+
+    try {
+      const paymentMethod = paymentIntent.payment_method
+        ? await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
+        : null;
+      const billingDetails = paymentMethod?.billing_details;
+
+      const customerName = billingDetails?.name || 'Klant';
+      const customerEmail = billingDetails?.email;
+      const stripeAddress = billingDetails?.address;
+      const address = stripeAddress
+        ? {
+            name: customerName,
+            line1: [stripeAddress.line1, stripeAddress.line2].filter(Boolean).join(' '),
+            postalCode: stripeAddress.postal_code,
+            city: stripeAddress.city,
+          }
+        : null;
+
+      const orderNumber = paymentIntent.id.slice(-8).toUpperCase();
+      const totalAmount = Math.round(paymentIntent.amount / 100);
+      const items = JSON.parse(paymentIntent.metadata?.items || '[]');
+      const paidAt = new Date();
+
+      console.log(`   Betaling ontvangen van ${customerEmail || '(geen e-mail)'} — order #${orderNumber} — €${totalAmount}`);
+
+      if (customerEmail) {
+        const confirmation = buildOrderConfirmationEmail({ orderNumber, customerName, customerEmail, items, totalAmount, address });
+        try {
+          await sendMailViaResend({ to: customerEmail, subject: confirmation.subject, html: confirmation.html, text: confirmation.text });
+        } catch (err) {
+          console.error('❌ Orderbevestiging naar klant mislukt:', err.message);
+        }
+      } else {
+        console.log('ℹ️  Geen klant-e-mail beschikbaar — orderbevestiging overgeslagen.');
+      }
+
+      const newOrder = buildNewOrderEmail({ orderNumber, customerName, customerEmail: customerEmail || '(onbekend)', items, totalAmount, address, paymentIntentId: paymentIntent.id, paidAt });
+      try {
+        await sendMailViaResend({ to: 'info@easypici.nl', subject: newOrder.subject, html: newOrder.html, text: newOrder.text });
+      } catch (err) {
+        console.error('❌ Interne bestel-notificatie mislukt:', err.message);
+      }
+
+      // Pas ná (poging tot) verzenden markeren — zo wordt bij een crash
+      // vóór dit punt de mail bij een eventuele Stripe-retry alsnog verstuurd.
+      await stripe.paymentIntents.update(paymentIntent.id, {
+        metadata: { ...paymentIntent.metadata, confirmation_email_sent: 'true' },
+      });
+    } catch (err) {
+      console.error('❌ Verwerken van payment_intent.succeeded mislukt:', err.message);
     }
   }
 
