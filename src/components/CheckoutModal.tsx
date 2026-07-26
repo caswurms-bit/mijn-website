@@ -37,12 +37,26 @@ function PaymentForm({
   const [addition, setAddition] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [city, setCity] = useState('');
+  // Nooit vooraf aangevinkt. termsError is los van de generieke error-tekst
+  // zodat de checkbox alleen aria-invalid krijgt als ZIJN validatie faalde,
+  // niet bij een latere Stripe-foutmelding.
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [termsError, setTermsError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+
+    // Vóór alles anders: zonder akkoord geen shipping-sync en geen
+    // confirmPayment. Blokkeert de betaling hard, niet alleen visueel.
+    if (!agreedToTerms) {
+      setTermsError(true);
+      setError('Je moet akkoord gaan met de Algemene voorwaarden voordat je kan afrekenen.');
+      return;
+    }
+    setTermsError(false);
 
     setLoading(true);
     setError('');
@@ -242,12 +256,54 @@ function PaymentForm({
         </div>
       </div>
 
+      {/* Akkoordverklaring — verplicht, staat nooit vooraf aan; direct boven
+          de betaalknop. htmlFor-koppeling + aria-invalid/aria-describedby
+          zodat de validatie ook voor screenreaders duidelijk is. Links in
+          een nieuw tabblad zodat ingevulde gegevens hier niet verloren gaan. */}
+      <div>
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="agree-terms"
+            checked={agreedToTerms}
+            onChange={e => {
+              setAgreedToTerms(e.target.checked);
+              if (e.target.checked) { setTermsError(false); setError(''); }
+            }}
+            aria-invalid={termsError}
+            aria-describedby={termsError ? 'agree-terms-error' : undefined}
+            className="mt-0.5 w-4 h-4 shrink-0 rounded border-slate-300 text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
+          />
+          <label htmlFor="agree-terms" className="text-xs text-slate-500 leading-relaxed cursor-pointer">
+            Ik ga akkoord met de{' '}
+            <a href="/voorwaarden" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-brand-600 font-semibold hover:underline">
+              Algemene voorwaarden
+            </a>{' '}
+            en bevestig dat ik de{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-brand-600 font-semibold hover:underline">
+              Privacyverklaring
+            </a>{' '}
+            en het beleid voor{' '}
+            <a href="/garantie-retouren" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-brand-600 font-semibold hover:underline">
+              Garantie &amp; Retouren
+            </a>{' '}
+            heb gelezen.
+          </label>
+        </div>
+        {termsError && (
+          <p id="agree-terms-error" role="alert" className="text-red-500 text-xs mt-2 pl-7">
+            Je moet akkoord gaan met de voorwaarden voordat je kan afrekenen.
+          </p>
+        )}
+      </div>
+
       {/* Foutmelding */}
-      {error && (
+      {error && !termsError && (
         <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3">{error}</p>
       )}
 
-      {/* Betalen knop */}
+      {/* Betalen knop — tekst maakt expliciet duidelijk dat dit tot een
+          betalingsverplichting leidt, met het werkelijke totaalbedrag. */}
       <button
         type="submit"
         disabled={!stripe || loading}
@@ -261,7 +317,7 @@ function PaymentForm({
         ) : (
           <>
             <ArrowRight size={18} />
-            Betaal € {total.toLocaleString('nl-NL')}
+            Bestellen en betalen – € {total.toLocaleString('nl-NL')}
           </>
         )}
       </button>
@@ -328,7 +384,7 @@ export default function CheckoutModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 20 }}
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="relative z-10 w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col sm:flex-row max-h-[90vh]"
+          className="checkout-modal-height relative z-10 w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col sm:flex-row"
         >
           {/* Links: besteloverzicht (donker) */}
           <div className="bg-slate-900 text-white p-8 sm:w-80 shrink-0 flex flex-col justify-between">
@@ -375,8 +431,20 @@ export default function CheckoutModal({
             </div>
           </div>
 
-          {/* Rechts: betaalformulier (wit) */}
-          <div className="flex-1 p-8 overflow-y-auto">
+          {/* Rechts: betaalformulier (wit) — min-h-0 is essentieel: een flex-
+              item heeft standaard min-height:auto, waardoor het (in de
+              flex-col mobiele layout) altijd op zijn volledige inhoud
+              uitrekt i.p.v. binnen de resterende ruimte te blijven en zelf
+              te scrollen — overflow-y-auto had daardoor in de praktijk geen
+              effect meer zodra het formulier (met het adresblok erbij)
+              hoger werd dan het scherm. overscroll-contain voorkomt dat een
+              scroll die hier de rand raakt doorlekt naar de achtergrond;
+              WebkitOverflowScrolling geeft vloeiend touch-scrollen op
+              (oudere) iOS. */}
+          <div
+            className="flex-1 min-h-0 p-8 overflow-y-auto overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             <h2 className="text-xl font-black text-slate-900 mb-6">Afrekenen</h2>
 
             {fetchError ? (

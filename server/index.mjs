@@ -36,6 +36,18 @@ const PORT = process.env.PORT || process.env.SERVER_PORT || 3001;
 const stripe = new Stripe(STRIPE_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// ─── Logging-helper: maskeert e-mailadressen in productielogs ────────────────
+// Volledige persoonsgegevens horen niet onnodig in logs — dit houdt genoeg
+// over om te herkennen/debuggen zonder het adres leesbaar te loggen.
+function maskEmail(email) {
+  if (!email) return '(geen e-mail)';
+  const [user, domain] = String(email).split('@');
+  if (!domain) return '***';
+  const maskUser = user.length <= 2 ? `${user[0]}*` : `${user[0]}${'*'.repeat(user.length - 2)}${user.slice(-1)}`;
+  const maskDomain = domain.length <= 3 ? `${domain[0]}${'*'.repeat(domain.length - 1)}` : `${domain[0]}${'*'.repeat(domain.length - 3)}${domain.slice(-2)}`;
+  return `${maskUser}@${maskDomain}`;
+}
+
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
 // Webhook heeft raw body nodig — MOET voor express.json() staan
@@ -322,10 +334,14 @@ app.post('/api/create-payment-intent', async (req, res) => {
       currency: 'eur',
       payment_method_types: ['ideal'],
       metadata: {
-        // tier/color zitten erbij zodat de order-e-mails na de webhook
-        // "Uitvoering" en "Kleur" per product kunnen tonen zonder de
-        // checkout zelf aan te hoeven passen.
+        // "items" blijft de volledige, authoritatieve bron (ondersteunt
+        // meerdere producten) voor de e-mails. product_name/tier/color zijn
+        // korte, vlakke, direct leesbare velden voor het Stripe-dashboard —
+        // bij meerdere producten kommagescheiden.
         items: JSON.stringify(items.map(i => ({ name: i.name, tier: i.tier, color: i.selectedColor, price: i.priceNum }))),
+        product_name: items.map(i => i.name).join(', '),
+        product_tier: items.map(i => i.tier).filter(Boolean).join(', '),
+        product_color: items.map(i => i.selectedColor).filter(Boolean).join(', '),
       },
     });
 
@@ -346,13 +362,30 @@ app.post('/api/create-payment-intent', async (req, res) => {
 // JSON-blob) zodat het adres ook direct leesbaar is in het Stripe-dashboard
 // en later eenvoudig programmatisch te gebruiken is voor verzending.
 app.post('/api/save-shipping-details', async (req, res) => {
-  const { paymentIntentId, email, firstName, lastName, street, houseNumber, addition, postalCode, city, country } = req.body || {};
+  const body = req.body || {};
+  // Alles als string behandelen en trimmen — voorkomt dat whitespace-only
+  // invoer (of een client die per ongeluk een getal stuurt voor postcode/
+  // huisnummer) de "verplicht"-check omzeilt.
+  const paymentIntentId = String(body.paymentIntentId || '').trim();
+  const email = String(body.email || '').trim();
+  const firstName = String(body.firstName || '').trim();
+  const lastName = String(body.lastName || '').trim();
+  const street = String(body.street || '').trim();
+  const houseNumber = String(body.houseNumber || '').trim();
+  const addition = String(body.addition || '').trim();
+  const postalCode = String(body.postalCode || '').trim();
+  const city = String(body.city || '').trim();
+  const country = String(body.country || 'NL').trim().toUpperCase();
 
-  if (!paymentIntentId || !paymentIntentId.startsWith('pi_')) {
+  if (!paymentIntentId.startsWith('pi_')) {
     return res.status(400).json({ error: 'Ongeldige paymentIntentId.' });
   }
   if (!firstName || !lastName || !street || !houseNumber || !postalCode || !city) {
-    return res.status(400).json({ error: 'Adresgegevens ontbreken.' });
+    return res.status(400).json({ error: 'Adresgegevens ontbreken of zijn leeg.' });
+  }
+  // Nederland is voorlopig het enige ondersteunde land.
+  if (country !== 'NL') {
+    return res.status(400).json({ error: 'Alleen bezorging binnen Nederland wordt momenteel ondersteund.' });
   }
 
   try {
@@ -362,17 +395,21 @@ app.post('/api/save-shipping-details', async (req, res) => {
         shipping_last_name: lastName,
         shipping_street: street,
         shipping_house_number: houseNumber,
-        shipping_addition: addition || '',
+        // Alleen zetten als daadwerkelijk ingevuld — Stripe metadata-keys
+        // zijn optioneel, en zo staat er geen loze lege toevoeging bij elke
+        // order.
+        ...(addition ? { shipping_house_number_addition: addition } : {}),
         shipping_postal_code: postalCode,
         shipping_city: city,
-        shipping_country: country || 'NL',
-        shipping_email: email || '',
+        shipping_country: country,
+        ...(email ? { shipping_email: email } : {}),
       },
     });
-    console.log(`✅ Afleveradres opgeslagen op ${paymentIntentId}`);
+    // Geen naam/adres in de log — alleen het (niet-persoonlijke) PaymentIntent-ID.
+    console.log(`✅ Verzendgegevens opgeslagen voor PaymentIntent ${paymentIntentId}`);
     res.json({ ok: true });
   } catch (error) {
-    console.error('❌ Opslaan afleveradres mislukt:', error.message);
+    console.error(`❌ Opslaan verzendgegevens mislukt voor PaymentIntent ${paymentIntentId}:`, error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -458,6 +495,9 @@ app.post('/api/webhooks/stripe', async (req, res) => {
       // zelf eventueel aan billing_details.address hangt. Fallback op
       // billing_details voor eventuele oudere/edge-case betalingen.
       const hasShippingMeta = Boolean(meta.shipping_street && meta.shipping_city);
+      if (!hasShippingMeta) {
+        console.warn(`⚠️  Geen shipping-metadata gevonden op PaymentIntent ${paymentIntent.id} — val terug op billing_details (indien aanwezig).`);
+      }
       const customerName = hasShippingMeta
         ? `${meta.shipping_first_name || ''} ${meta.shipping_last_name || ''}`.trim()
         : billingDetails?.name || 'Klant';
@@ -467,7 +507,7 @@ app.post('/api/webhooks/stripe', async (req, res) => {
       if (hasShippingMeta) {
         address = {
           name: customerName,
-          line1: `${meta.shipping_street} ${meta.shipping_house_number}${meta.shipping_addition ? ' ' + meta.shipping_addition : ''}`.trim(),
+          line1: `${meta.shipping_street} ${meta.shipping_house_number}${meta.shipping_house_number_addition ? ' ' + meta.shipping_house_number_addition : ''}`.trim(),
           postalCode: meta.shipping_postal_code,
           city: meta.shipping_city,
         };
@@ -486,7 +526,7 @@ app.post('/api/webhooks/stripe', async (req, res) => {
       const items = JSON.parse(paymentIntent.metadata?.items || '[]');
       const paidAt = new Date();
 
-      console.log(`   Betaling ontvangen van ${customerEmail || '(geen e-mail)'} — order #${orderNumber} — €${totalAmount}`);
+      console.log(`   Betaling ontvangen van ${maskEmail(customerEmail)} — order #${orderNumber} — €${totalAmount}`);
 
       if (customerEmail) {
         const confirmation = buildOrderConfirmationEmail({ orderNumber, customerName, customerEmail, items, totalAmount, address });

@@ -12,3 +12,17 @@
     max-width: 100vw;
   }
 }
+
+/* dvh i.p.v. uitsluitend vh voor de checkout-modal: op mobiel is vh vaak
+   groter dan de daadwerkelijk zichtbare ruimte (browser-adresbalk telt wel
+   mee bij vh, niet bij dvh), waardoor de onderkant van de modal (velden,
+   betaalknop) achter de browser-UI kan verdwijnen. Twee declaraties voor
+   dezelfde property i.p.v. Tailwind-utility-stacking: browsers zonder dvh-
+   support negeren simpelweg de tweede (ongeldige) regel en houden de vh-
+   waarde aan, i.p.v. dat de hele declaratie verloren gaat. */
+@layer components {
+  .checkout-modal-height {
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
+}

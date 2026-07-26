@@ -957,22 +957,14 @@ const CartPanelContent = ({
             <span className="text-2xl font-black text-brand-600">€ {total.toLocaleString('nl-NL')}</span>
           </div>
 
-          {/* CTA knoppen */}
+          {/* CTA — na verwijdering van 'Bestellen via mail' is Afrekenen de
+              enige route vanuit de winkelwagen. */}
           <button
             onClick={onCheckout}
-            className="w-full py-3.5 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 mb-3"
+            className="w-full py-3.5 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
           >
             <CreditCard size={18} />
             Afrekenen
-          </button>
-          <button
-            onClick={() => {
-              window.location.href = `mailto:info@easypici.nl?subject=Bestelling: ${cart.map((i) => i.name).join(', ')}`;
-            }}
-            className="w-full py-3 bg-slate-100 text-slate-600 rounded-2xl font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 text-sm"
-          >
-            <Mail size={16} />
-            Bestellen via mail
           </button>
 
           {/* Trust */}
