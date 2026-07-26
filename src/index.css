@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Laatste vangnet tegen horizontale scroll — de daadwerkelijke oorzaken
+   (o.a. de footer-linkrij en navbar die niet wrapten op smalle schermen)
+   zijn los opgelost; dit voorkomt alleen dat een toekomstige, nog
+   onopgemerkte overflow de pagina alsnog horizontaal laat schuiven. */
+@layer base {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+}

@@ -220,8 +220,12 @@ const Navbar = ({ cartCount, onOpenCart }: { cartCount: number; onOpenCart: () =
       </a>
       <div className="flex items-center gap-2 sm:gap-4 md:gap-8 font-semibold text-white">
         <div className="flex items-center gap-3 sm:gap-8 text-[11px] sm:text-base uppercase sm:normal-case tracking-wider sm:tracking-normal">
+          {/* Beide op hidden sm:block — samen met logo, cart-icoon en
+              "Shop Nu" wordt de rij op de smalste telefoons (~360px) anders
+              net te breed voor de beschikbare ruimte, wat de fixed navbar
+              (en daarmee de hele pagina) horizontaal liet overflowen. */}
           <a href="/#builds" className="hidden sm:block hover:text-brand-400 transition-colors whitespace-nowrap">Onze Pc's</a>
-          <a href="/#story" className="hover:text-brand-400 transition-colors whitespace-nowrap">Ons Verhaal</a>
+          <a href="/#story" className="hidden sm:block hover:text-brand-400 transition-colors whitespace-nowrap">Ons Verhaal</a>
         </div>
         <button
           onClick={onOpenCart}
@@ -789,7 +793,11 @@ const Footer = () => (
       <p className="text-slate-500 text-sm text-center">
         © {new Date().getFullYear()} Easy PiCi · Handgebouwde gaming pc's · Voorburg, NL
       </p>
-      <div className="flex items-center gap-4 sm:gap-6">
+      {/* flex-wrap: 5 links (waarvan één met whitespace-nowrap) passen niet op
+          één regel op smalle mobiele schermen — zonder wrap duwt dat de rij
+          breder dan de viewport en veroorzaakt het horizontale scroll van de
+          hele pagina, want deze footer staat op elke route. */}
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-x-6">
         <a
           href="/voorwaarden"
           className="text-slate-400 hover:text-white transition-colors text-sm"

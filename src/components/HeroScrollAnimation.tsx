@@ -319,7 +319,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   }, [canScrub]);
 
   return (
-    <section ref={sectionRef} className="relative h-[160vh] bg-slate-950">
+    <section ref={sectionRef} className="relative h-[160vh] bg-slate-950 overflow-x-hidden">
       <div className="sticky top-0 h-screen w-full overflow-hidden z-0">
         <div
           ref={containerRef}
