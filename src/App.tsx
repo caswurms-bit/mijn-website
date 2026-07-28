@@ -1120,6 +1120,13 @@ export default function App() {
     const scrollY = window.scrollY;
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
+    // TIJDELIJKE DEBUGLOGGING — verwijderen zodra bevestigd is dat scrollen
+    // in de checkout-modal stabiel werkt. Als dit effect na het openen nóg
+    // een keer "mount" logt (i.p.v. alleen bij open/close), betekent dat dat
+    // checkoutOpen of lenis van referentie wisselt terwijl de modal al open
+    // is — dat zou de body-lock (en mogelijk Lenis' state) kort resetten.
+    console.log('[DEBUG-SCROLL] body-lock effect MOUNT', { time: performance.now(), lenisDefined: Boolean(lenis) });
+
     lenis?.stop();
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
@@ -1131,6 +1138,9 @@ export default function App() {
     }
 
     return () => {
+      // TIJDELIJKE DEBUGLOGGING — zie hierboven.
+      console.log('[DEBUG-SCROLL] body-lock effect CLEANUP (unlock)', { time: performance.now() });
+
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';

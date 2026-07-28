@@ -360,6 +360,10 @@ export default function CheckoutModal({
     })
       .then(r => r.json())
       .then(data => {
+        // TIJDELIJKE DEBUGLOGGING — verwijderen na bevestiging dat scrollen
+        // stabiel werkt. Bevestigt of dit de ~1s-timing is waarop de modal
+        // van spinner naar volledig formulier wisselt.
+        console.log('[DEBUG-SCROLL] PaymentIntent geladen, formulier mount nu', { time: performance.now() });
         if (data.clientSecret) setClientSecret(data.clientSecret);
         else setFetchError('Kon betaling niet starten. Controleer of de server draait.');
       })
@@ -440,9 +444,24 @@ export default function CheckoutModal({
               hoger werd dan het scherm. overscroll-contain voorkomt dat een
               scroll die hier de rand raakt doorlekt naar de achtergrond;
               WebkitOverflowScrolling geeft vloeiend touch-scrollen op
-              (oudere) iOS. */}
+              (oudere) iOS.
+
+              data-lenis-prevent is de daadwerkelijke fix voor het "scrollt
+              even, blokkeert dan"-probleem: Lenis luistert GLOBAAL op window
+              naar wheel/touch-events. Zolang lenis.stop() actief is (de
+              hele tijd dat deze modal open staat, zie App.tsx), roept Lenis
+              op ÉLK wheel/touch-event preventDefault() aan — ook binnen deze
+              container — TENZIJ een voorouder dit attribuut heeft; dat
+              checkt Lenis vóór de isStopped-afhandeling (zie
+              node_modules/lenis/dist/lenis.mjs, composedPath-check vóór de
+              isStopped-check). Zonder dit attribuut kón hier dus nooit echt
+              gescrold worden; het leek pas "na ~1s" te blokkeren omdat er
+              vóór het laden van de Payment Intent nog nauwelijks content
+              (dus niets om te scrollen) stond. touch-pan-y laat op CSS-niveau
+              alvast verticaal pannen toe, onafhankelijk van JS-handlers. */}
           <div
-            className="flex-1 min-h-0 p-8 overflow-y-auto overscroll-contain"
+            data-lenis-prevent
+            className="flex-1 min-h-0 p-8 overflow-y-auto overscroll-contain touch-pan-y"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <h2 className="text-xl font-black text-slate-900 mb-6">Afrekenen</h2>
