@@ -88,15 +88,13 @@ function PaymentForm({
     // Stripe bevestigt de betaling en stuurt de klant (bij een redirect-
     // methode zoals iDEAL) door naar de bank. Na de bank redirect komt de
     // klant terug op de return_url — Stripe hangt hier zelf nog
-    // payment_intent/redirect_status etc. aan vast (voegt toe, overschrijft
-    // niet). `amount` is hetzelfde bedrag waarmee de Payment Intent is
-    // aangemaakt (server-side, uit dezelfde cart-items) — dus betrouwbaar
-    // genoeg voor de Google Ads-conversiewaarde op de successpagina, zonder
-    // dat daarvoor een aparte backend-lookup nodig is.
+    // payment_intent/redirect_status etc. aan vast. De successpagina haalt
+    // de echte PaymentIntent (status/bedrag) zelf op bij de backend, dus
+    // hoeft hier geen bedrag meer aan de URL te worden toegevoegd.
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${RETURN_ORIGIN}/success?amount=${total}`,
+        return_url: `${RETURN_ORIGIN}/success`,
         payment_method_data: {
           billing_details: {
             email,

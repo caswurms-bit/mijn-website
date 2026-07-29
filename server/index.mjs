@@ -414,6 +414,33 @@ app.post('/api/save-shipping-details', async (req, res) => {
   }
 });
 
+// ─── GET /api/payment-intent/:id ──────────────────────────────────────────────
+// Voor betrouwbare Google Ads-conversietracking op de successpagina: de
+// frontend leest alleen de payment_intent-ID uit de URL en vraagt hier de
+// echte status/bedrag op i.p.v. te vertrouwen op een query-param die de
+// frontend zelf ooit heeft meegegeven. Retourneert bewust alleen niet-
+// gevoelige samenvattingsvelden — geen metadata (bevat naam/adres), geen
+// betaalmethode-details.
+app.get('/api/payment-intent/:id', async (req, res) => {
+  const id = req.params.id;
+  if (!id || !id.startsWith('pi_')) {
+    return res.status(400).json({ error: 'Ongeldig PaymentIntent-ID.' });
+  }
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(id);
+    res.json({
+      status: paymentIntent.status,
+      amount_received: paymentIntent.amount_received,
+      currency: paymentIntent.currency,
+      paymentIntentId: paymentIntent.id,
+    });
+  } catch (error) {
+    console.error(`❌ Ophalen PaymentIntent ${id} mislukt:`, error.message);
+    res.status(404).json({ error: 'PaymentIntent niet gevonden.' });
+  }
+});
+
 // ─── POST /api/webhooks/stripe ────────────────────────────────────────────────
 // Stripe stuurt dit event nadat de betaling geslaagd is.
 // Lokaal testen: stripe listen --forward-to localhost:3001/api/webhooks/stripe

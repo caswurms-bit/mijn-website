@@ -981,25 +981,43 @@ const CartPanelContent = ({
 };
 
 // --- SUCCES PAGINA ---
-// Google Ads Purchase-conversiemeting. transaction_id komt uit de
-// payment_intent-query-param die Stripe zelf aan de return_url toevoegt.
-// value komt uit de amount-query-param die CheckoutModal zelf meegeeft aan
-// de return_url — hetzelfde bedrag waarmee de Payment Intent server-side is
-// aangemaakt (uit dezelfde cart-items), dus betrouwbaar genoeg zonder een
-// aparte backend-lookup. App() hieronder bevestigt via redirect_status dat
-// de betaling ook echt geslaagd is vóór deze pagina ooit getoond wordt.
+// Google Ads Purchase-conversiemeting. Leest uitsluitend de payment_intent-
+// ID uit de URL (die Stripe zelf aan de return_url toevoegt) en haalt de
+// écht bevestigde status/bedrag/valuta bij de backend op i.p.v. een waarde
+// te vertrouwen die de frontend zelf ooit heeft meegegeven — App() hieronder
+// bevestigt via redirect_status al dat de betaling geslaagd is vóór deze
+// pagina ooit getoond wordt, maar amount_received > 0 is de daadwerkelijke,
+// door Stripe bevestigde waarheid.
 const SuccessPage = () => {
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const transactionId = params.get('payment_intent') || '';
-    const amount = params.get('amount');
-    if (!amount) return;
-    window.gtag?.('event', 'conversion', {
-      send_to: 'AW-18345076370/w8G5COb07tUcEJLNzqtE',
-      value: Number(amount),
-      currency: 'EUR',
-      transaction_id: transactionId,
-    });
+    const paymentIntentId = new URLSearchParams(window.location.search).get('payment_intent');
+    if (!paymentIntentId) return;
+
+    // Voorkomt een dubbele conversie voor dezelfde PaymentIntent — zowel bij
+    // een handmatige refresh van deze pagina als bij React StrictMode's
+    // dubbele effect-invocatie in dev. De sessionStorage-claim gebeurt
+    // synchroon, vóór de async fetch, zodat een tweede (Strict Mode-)
+    // aanroep de claim al ziet staan vóórdat er ooit een tweede fetch/
+    // conversie-event kan plaatsvinden.
+    const storageKey = `pici_conversion_sent_${paymentIntentId}`;
+    if (sessionStorage.getItem(storageKey)) return;
+    sessionStorage.setItem(storageKey, 'true');
+
+    fetch(`https://api.easypici.nl/api/payment-intent/${paymentIntentId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (!data) return;
+        const { status, amount_received, currency } = data;
+        if (status !== 'succeeded' || !amount_received || amount_received <= 0) return;
+
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-18345076370/w8G5COb07tUcEJLNzqtE',
+          value: amount_received / 100,
+          currency: currency.toUpperCase(),
+          transaction_id: paymentIntentId,
+        });
+      })
+      .catch(() => {});
   }, []);
 
   return (
