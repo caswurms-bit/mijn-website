@@ -981,29 +981,27 @@ const CartPanelContent = ({
 };
 
 // --- SUCCES PAGINA ---
-// Voorbereid op Google Ads Purchase-conversiemeting, maar bewust nog GEEN
-// conversie-event: het bedrag zou nu uit de lokale winkelwagen-state moeten
-// komen, wat niet betrouwbaar hoeft overeen te komen met wat Stripe
-// daadwerkelijk in rekening heeft gebracht. Zodra de echte Stripe-
-// ordergegevens (waarde, valuta) betrouwbaar beschikbaar zijn — bv. via een
-// eigen backend-call die de PaymentIntent opzoekt — kan hier eenvoudig het
-// volgende worden toegevoegd:
-//
-//   useEffect(() => {
-//     const transactionId = new URLSearchParams(window.location.search).get('payment_intent') || '';
-//     window.gtag?.('event', 'conversion', {
-//       send_to: 'AW-18345076370/w8G5COb07tUcEJLNzqtE',
-//       value: /* werkelijke orderwaarde uit Stripe */,
-//       currency: /* werkelijke valuta uit Stripe, bv. 'EUR' */,
-//       transaction_id: transactionId,
-//     });
-//   }, []);
-//
-// (transaction_id is nu al betrouwbaar beschikbaar via de payment_intent-
-// query-param die Stripe zelf aan de return_url toevoegt — zie App()
-// hieronder voor hoe redirect_status bevestigt dat de betaling ook echt
-// geslaagd is vóór deze pagina ooit getoond wordt.)
+// Google Ads Purchase-conversiemeting. transaction_id komt uit de
+// payment_intent-query-param die Stripe zelf aan de return_url toevoegt.
+// value komt uit de amount-query-param die CheckoutModal zelf meegeeft aan
+// de return_url — hetzelfde bedrag waarmee de Payment Intent server-side is
+// aangemaakt (uit dezelfde cart-items), dus betrouwbaar genoeg zonder een
+// aparte backend-lookup. App() hieronder bevestigt via redirect_status dat
+// de betaling ook echt geslaagd is vóór deze pagina ooit getoond wordt.
 const SuccessPage = () => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const transactionId = params.get('payment_intent') || '';
+    const amount = params.get('amount');
+    if (!amount) return;
+    window.gtag?.('event', 'conversion', {
+      send_to: 'AW-18345076370/w8G5COb07tUcEJLNzqtE',
+      value: Number(amount),
+      currency: 'EUR',
+      transaction_id: transactionId,
+    });
+  }, []);
+
   return (
   <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
     <motion.div
