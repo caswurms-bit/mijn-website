@@ -53,7 +53,7 @@ const BUILDS = [
       'Koeling: 240mm AIO',
       'Voeding: 650W 80+ Bronze',
     ],
-    warranty: '3 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar hardwaregarantie op de complete pc.',
     note: 'Volledig geïnstalleerd geleverd — aansluiten en direct gamen.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -80,7 +80,7 @@ const BUILDS = [
       'Koeling: 240mm AIO',
       'Voeding: 650W 80+ Bronze',
     ],
-    warranty: '3 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar hardwaregarantie op de complete pc.',
     note: 'Meest gekozen — de beste prijs/prestatie van onze lineup.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -106,7 +106,7 @@ const BUILDS = [
       'Koeling: 240mm AIO',
       'Voeding: 750W 80+ Gold',
     ],
-    warranty: '3 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar hardwaregarantie op de complete pc.',
     note: 'Direct leverbaar — zelfde kwaliteit en zorgvuldigheid als alle andere builds.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -123,16 +123,16 @@ const BUILDS = [
     priceNum: 2500,
     target: 'High-End Gaming & Creatie',
     shortDesc: 'Onze krachtigste build. Voor wie geen compromissen wil en het maximale wil uit zijn setup.',
-    description: 'De Elite is voor wie het maximale wil — en dat ook weet. Ryzen 9, RTX 5070 Ti, DDR5 en 2 TB opslag. Dit systeem is gebouwd voor zware games, streaming, video-editing en alles tegelijk. De 360mm AIO en het volledige glasdesign zijn bewust gekozen: dit is een pc om trots op te zijn, niet alleen om te presteren.',
+    description: 'De Elite is voor wie het maximale wil — en dat ook weet. Ryzen 7, RTX 5070 Ti, DDR5 en 2 TB opslag. Dit systeem is gebouwd voor zware games, streaming, video-editing en alles tegelijk. De 360mm AIO en het volledige glasdesign zijn bewust gekozen: dit is een pc om trots op te zijn, niet alleen om te presteren.',
     specs: [
-      'CPU: Ryzen 9 9700X',
+      'CPU: Ryzen 7 9700X',
       'GPU: RTX 5070 Ti',
       'RAM: 32 GB DDR5',
       'Opslag: 2 TB NVMe SSD',
       'Koeling: 360mm AIO',
       'Voeding: 850W 80+ Gold',
     ],
-    warranty: '3 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar hardwaregarantie op de complete pc.',
     note: 'Onze flagship build — voor wie het maximale wil, zonder concessies.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -971,7 +971,7 @@ const CartPanelContent = ({
           <div className="flex items-center justify-center gap-4 mt-4 text-[11px] text-slate-400">
             <span className="flex items-center gap-1"><ShieldCheck size={11} /> Veilig</span>
             <span className="flex items-center gap-1"><Zap size={11} /> Snel geregeld</span>
-            <span className="flex items-center gap-1"><CheckCircle2 size={11} /> 3 jaar garantie</span>
+            <span className="flex items-center gap-1"><CheckCircle2 size={11} /> 2 jaar garantie</span>
           </div>
         </div>
       </>

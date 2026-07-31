@@ -21,7 +21,7 @@ export default function GarantiePage() {
             <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">Garantie</h2>
             <div className="space-y-3 text-sm sm:text-base text-slate-600 leading-relaxed">
               <p>Bij Easy PiCi vinden we kwaliteit belangrijk. Daarom wordt iedere computer zorgvuldig gebouwd, getest en gecontroleerd voordat deze wordt verzonden.</p>
-              <p>Op alle producten geldt de wettelijke garantie. Je mag verwachten dat jouw computer functioneert zoals je als consument redelijkerwijs mag verwachten.</p>
+              <p>Op iedere Easy PiCi geldt een garantietermijn van 2 jaar. Je mag verwachten dat jouw computer gedurende deze periode functioneert zoals je als consument redelijkerwijs mag verwachten.</p>
               <p>Ontstaat er bij normaal gebruik een technisch defect door een fabricage- of hardwarefout? Neem dan contact met ons op. Wij zorgen voor een passende oplossing, zoals reparatie, vervanging of – indien nodig – terugbetaling.</p>
             </div>
           </section>

@@ -14,6 +14,7 @@ const TRUST_ITEMS = [
   'Direct klaar voor gebruik',
   'Windows & drivers geïnstalleerd',
   'Professioneel gebouwd en getest',
+  '2 jaar garantie',
 ];
 
 interface CubeSeriesPageProps {
