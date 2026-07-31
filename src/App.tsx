@@ -998,10 +998,17 @@ const SuccessPage = () => {
     // dubbele effect-invocatie in dev. De sessionStorage-claim gebeurt
     // synchroon, vóór de async fetch, zodat een tweede (Strict Mode-)
     // aanroep de claim al ziet staan vóórdat er ooit een tweede fetch/
-    // conversie-event kan plaatsvinden.
+    // conversie-event kan plaatsvinden. try/catch omdat sessionStorage in
+    // sommige privénavigatie-configuraties (met name oudere Safari) kan
+    // gooien — zonder deze vangnet zou de conversie dan nooit vuren.
     const storageKey = `pici_conversion_sent_${paymentIntentId}`;
-    if (sessionStorage.getItem(storageKey)) return;
-    sessionStorage.setItem(storageKey, 'true');
+    try {
+      if (sessionStorage.getItem(storageKey)) return;
+      sessionStorage.setItem(storageKey, 'true');
+    } catch {
+      // sessionStorage niet beschikbaar — ga door zonder dubbele-conversie-
+      // bescherming i.p.v. de conversie helemaal te laten mislukken.
+    }
 
     fetch(`https://api.easypici.nl/api/payment-intent/${paymentIntentId}`)
       .then(r => (r.ok ? r.json() : null))

@@ -18,9 +18,11 @@
       // cookiebanner/CMP de daadwerkelijke keuze van de bezoeker doorgeeft
       // via gtag('consent', 'update', {...}). Deze default-aanroep moet vóór
       // gtag('js', ...) en gtag('config', ...) staan, zodat er nooit tags
-      // met impliciete toestemming vuren. Er is momenteel geen cookiebanner
-      // in dit project — zodra die er komt, moet die op de daadwerkelijke
-      // keuze van de bezoeker 'consent update' aanroepen.
+      // met impliciete toestemming vuren. CookieConsentBanner.tsx roept bij
+      // "Accepteren" gtag('consent', 'update', {...granted}) aan; bij
+      // "Weigeren" (of geen keuze) blijft deze 'denied'-default van kracht,
+      // en verloopt conversietracking via Google's cookieless/modeled pings
+      // i.p.v. volledige attributie.
       gtag('consent', 'default', {
         'ad_storage': 'denied',
         'ad_user_data': 'denied',
