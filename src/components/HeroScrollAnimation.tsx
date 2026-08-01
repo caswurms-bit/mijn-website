@@ -319,7 +319,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   }, [canScrub]);
 
   return (
-    <section ref={sectionRef} className="relative h-[102vh] bg-slate-950 overflow-x-hidden">
+    <section ref={sectionRef} className="relative h-[106vh] bg-slate-950 overflow-x-hidden">
       <div className="sticky top-0 h-screen w-full overflow-hidden z-0">
         <div
           ref={containerRef}
@@ -348,13 +348,17 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       <div className="relative z-10 -mt-[100vh] min-h-screen w-full flex items-center justify-center">
         {children}
       </div>
-      {/* Deze lege spacer bepaalt hoeveel scrollruimte de sticky video krijgt
-          om te scrubben (sticky blijft "vast" voor precies zoveel scroll als
-          deze div hoog is) — stond eerst op h-[60vh], leeg en op de donkere
-          achtergrond van deze section, wat als een zwarte balk oogde vlak
-          vóór de (witte) volgende sectie. Verder verkleind naar een minimale
-          waarde (was al eens verkleind naar 10vh, bleek nog net zichtbaar). */}
-      <div className="h-[2vh]" />
+      {/* Deze spacer bepaalt hoeveel scrollruimte de sticky video krijgt om
+          te scrubben (sticky blijft "vast" voor precies zoveel scroll als
+          deze div hoog is). Een lege div hier stond op de donkere
+          achtergrond van deze section, wat altijd als een harde zwarte balk
+          oogde vlak vóór de (witte) volgende sectie — simpelweg kleiner
+          maken loste dat nooit echt op, want elke niet-lege hoogte op een
+          effen kleur blijft een zichtbare rand geven. In plaats daarvan
+          vervaagt deze spacer nu zelf van de section-achtergrond (slate-950)
+          naar wit, zodat de overgang naar de volgende sectie een vloeiende
+          fade is i.p.v. een harde rand. */}
+      <div className="h-[6vh] bg-gradient-to-b from-slate-950 to-white" />
     </section>
   );
 };
