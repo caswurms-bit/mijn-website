@@ -319,7 +319,7 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
   }, [canScrub]);
 
   return (
-    <section ref={sectionRef} className="relative h-[110vh] bg-slate-950 overflow-x-hidden">
+    <section ref={sectionRef} className="relative h-[102vh] bg-slate-950 overflow-x-hidden">
       <div className="sticky top-0 h-screen w-full overflow-hidden z-0">
         <div
           ref={containerRef}
@@ -351,11 +351,10 @@ const HeroScrollAnimation: React.FC<HeroScrollAnimationProps> = ({ children }) =
       {/* Deze lege spacer bepaalt hoeveel scrollruimte de sticky video krijgt
           om te scrubben (sticky blijft "vast" voor precies zoveel scroll als
           deze div hoog is) — stond eerst op h-[60vh], leeg en op de donkere
-          achtergrond van deze section, wat als een kale zwarte balk oogde
-          vlak vóór de (witte) volgende sectie. Fors verkleind zodat die
-          balk verdwijnt; het scrub-effect zelf blijft nog wel werken, alleen
-          over een kortere scrollafstand. */}
-      <div className="h-[10vh]" />
+          achtergrond van deze section, wat als een zwarte balk oogde vlak
+          vóór de (witte) volgende sectie. Verder verkleind naar een minimale
+          waarde (was al eens verkleind naar 10vh, bleek nog net zichtbaar). */}
+      <div className="h-[2vh]" />
     </section>
   );
 };
