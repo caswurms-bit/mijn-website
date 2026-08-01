@@ -417,6 +417,9 @@ export default function CheckoutModal({
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm leading-tight truncate">{item.name}</p>
                       <p className="text-slate-400 text-xs mt-0.5">{item.target}</p>
+                      {item.mountType === 'vertical' && (
+                        <p className="text-slate-400 text-xs mt-0.5">Verticale montage (+€{item.mountSurcharge})</p>
+                      )}
                     </div>
                     <p className="text-brand-400 font-black text-sm shrink-0">{item.price}</p>
                   </div>

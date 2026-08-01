@@ -1,8 +1,21 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
-import CubeModelSelector, { type CubeModel, getSpecValue, isCubeModel } from '../components/CubeModelSelector';
+import CubeModelSelector, { type CubeModel, isCubeModel } from '../components/CubeModelSelector';
 import AddToCartButton from '../components/AddToCartButton';
+import {
+  PRODUCT_SPECS,
+  OS_TEXT,
+  WARRANTY_TEXT,
+  GPU_TECH_NOTE,
+  TRANSPARENCY_NOTE,
+  VERTICAL_MOUNT_SURCHARGE,
+  VERTICAL_MOUNT_NOTE,
+  formatGpu,
+  formatRam,
+  formatPsu,
+  getKeySpecLines,
+} from '../data/productSpecs';
 
 function getModelFromUrl(): CubeModel {
   const params = new URLSearchParams(window.location.search);
@@ -14,7 +27,7 @@ const TRUST_ITEMS = [
   'Direct klaar voor gebruik',
   'Windows & drivers geïnstalleerd',
   'Professioneel gebouwd en getest',
-  '2 jaar garantie',
+  WARRANTY_TEXT,
 ];
 
 interface CubeSeriesPageProps {
@@ -25,6 +38,7 @@ interface CubeSeriesPageProps {
 export default function CubeSeriesPage({ builds, onAddToCart }: CubeSeriesPageProps) {
   const [selectedModel, setSelectedModel] = useState<CubeModel>(getModelFromUrl);
   const [color, setColor] = useState<'black' | 'white'>('black');
+  const [mount, setMount] = useState<'horizontal' | 'vertical'>('horizontal');
   const [added, setAdded] = useState(false);
 
   // Sync met de browser back/forward-knoppen — geen page reload, alleen state bijwerken.
@@ -44,22 +58,36 @@ export default function CubeSeriesPage({ builds, onAddToCart }: CubeSeriesPagePr
   };
 
   const build = builds.find((b) => b.id === selectedModel) ?? builds[0];
+  const spec = PRODUCT_SPECS[build.id];
+  const keySpecLines = getKeySpecLines(spec);
   const specRows = [
-    ['Processor', getSpecValue(build.specs, 'CPU:')],
-    ['Videokaart', getSpecValue(build.specs, 'GPU:')],
-    ['Werkgeheugen', getSpecValue(build.specs, 'RAM:')],
-    ['Opslag', getSpecValue(build.specs, 'Opslag:')],
-    ['Koeling', getSpecValue(build.specs, 'Koeling:')],
-    ['Voeding', getSpecValue(build.specs, 'Voeding:')],
-    ['Besturingssysteem', 'Windows 11'],
+    ['Processor', spec.cpu],
+    ['Videokaart', formatGpu(spec)],
+    ['Werkgeheugen', formatRam(spec)],
+    ['Opslag', spec.storage],
+    ['Koeling', spec.cooling],
+    ['Voeding', formatPsu(spec)],
+    ['Besturingssysteem', OS_TEXT],
   ];
+
+  const mountSurcharge = mount === 'vertical' ? VERTICAL_MOUNT_SURCHARGE : 0;
+  const totalPriceNum = build.priceNum + mountSurcharge;
 
   const handleAdd = () => {
     if (added) return;
     // De geselecteerde kleur meegeven aan het winkelwagen-item — anders
     // toont de winkelwagen altijd de zwarte foto, ongeacht welke uitvoering
-    // daadwerkelijk gekozen was.
-    onAddToCart({ ...build, selectedColor: color });
+    // daadwerkelijk gekozen was. mountType/mountSurcharge en de aangepaste
+    // prijs gaan mee zodat winkelwagen, checkout, Stripe-metadata en e-mails
+    // allemaal dezelfde, al berekende waarde gebruiken.
+    onAddToCart({
+      ...build,
+      selectedColor: color,
+      mountType: mount,
+      mountSurcharge,
+      priceNum: totalPriceNum,
+      price: `€ ${totalPriceNum.toLocaleString('nl-NL')}`,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -138,7 +166,7 @@ export default function CubeSeriesPage({ builds, onAddToCart }: CubeSeriesPagePr
                 {build.tier}
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1 mb-2">{build.name}</h2>
-              <span className="block text-3xl sm:text-4xl font-black text-brand-600 mb-5 sm:mb-6">{build.price}</span>
+              <span className="block text-3xl sm:text-4xl font-black text-brand-600 mb-5 sm:mb-6">€ {totalPriceNum.toLocaleString('nl-NL')}</span>
 
               {/* Belangrijkste USP, prominent direct onder de prijs */}
               <div className="bg-brand-50 border border-brand-100 rounded-2xl p-5 sm:p-6 mb-6 sm:mb-8">
@@ -156,14 +184,61 @@ export default function CubeSeriesPage({ builds, onAddToCart }: CubeSeriesPagePr
 
               <p className="text-slate-600 leading-relaxed mb-8 sm:mb-10">{build.description}</p>
 
+              {/* Belangrijkste specificaties — scanbaar overzicht van de
+                  belangrijkste eigenschappen, vóór de uitgebreide lijst. */}
+              <div className="mb-8 sm:mb-10 bg-slate-50 border border-slate-100 rounded-2xl p-5 sm:p-6">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 sm:mb-5">Belangrijkste specificaties</h3>
+                <div className="space-y-2.5">
+                  {keySpecLines.map(([label, value]) => (
+                    <div key={label} className="flex items-start justify-between gap-4 text-sm sm:text-base">
+                      <span className="text-slate-500 shrink-0">{label}</span>
+                      <span className="font-semibold text-slate-900 text-right">{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed mt-4 pt-4 border-t border-slate-200">
+                  {GPU_TECH_NOTE}
+                </p>
+              </div>
+
+              {/* Videokaartmontage — standaard horizontaal, optioneel verticaal
+                  tegen meerprijs. Beïnvloedt de prijs die met de winkelwagen
+                  meegaat. */}
+              <div className="mb-8 sm:mb-10">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Montage videokaart</h3>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setMount('horizontal')}
+                    className={`px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border text-xs sm:text-sm font-bold transition-colors text-left ${
+                      mount === 'horizontal' ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    Standaard horizontaal
+                    <span className="block font-normal text-[11px] mt-0.5 opacity-80">Inbegrepen</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMount('vertical')}
+                    className={`px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border text-xs sm:text-sm font-bold transition-colors text-left ${
+                      mount === 'vertical' ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    Verticale montage
+                    <span className="block font-normal text-[11px] mt-0.5 opacity-80">+ €{VERTICAL_MOUNT_SURCHARGE}</span>
+                  </button>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed mt-3">{VERTICAL_MOUNT_NOTE}</p>
+              </div>
+
               {/* Specificaties — rustige lijst, geen losse omkaderde blokken */}
               <div className="mb-8 sm:mb-10">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 sm:mb-5">Specificaties</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 sm:mb-5">Alle specificaties</h3>
                 <div className="space-y-3">
                   {specRows.map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between border-b border-slate-100 pb-3 text-sm sm:text-base">
-                      <span className="text-slate-500">{label}</span>
-                      <span className="font-semibold text-slate-900">{value}</span>
+                    <div key={label} className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3 text-sm sm:text-base">
+                      <span className="text-slate-500 shrink-0">{label}</span>
+                      <span className="font-semibold text-slate-900 text-right">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -182,11 +257,14 @@ export default function CubeSeriesPage({ builds, onAddToCart }: CubeSeriesPagePr
               {/* In winkelwagen, tenzij het product niet leverbaar is */}
               <AddToCartButton stockStatus={build.stockStatus} added={added} onClick={handleAdd} />
 
-              {/* Transparantie over productfoto's — subtiel, geen aandacht trekken */}
-              <div className="mt-6 sm:mt-8">
+              {/* Transparantie over productfoto's en onderdelen — subtiel, geen aandacht trekken */}
+              <div className="mt-6 sm:mt-8 space-y-2">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Goed om te weten</p>
                 <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
                   Afbeeldingen dienen ter illustratie. Om de beste prijs en snelle levering te garanderen, kunnen merken en uiterlijke details van sommige onderdelen afwijken. De vermelde specificaties en prestaties blijven altijd gelijk of beter.
+                </p>
+                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
+                  {TRANSPARENCY_NOTE}
                 </p>
               </div>
             </div>

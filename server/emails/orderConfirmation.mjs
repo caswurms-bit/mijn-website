@@ -9,7 +9,7 @@ const EUR = (n) => `€ ${Number(n).toLocaleString('nl-NL')}`;
  * @param {string} params.orderNumber
  * @param {string} params.customerName
  * @param {string} params.customerEmail
- * @param {Array<{name:string, tier?:string, color?:string, price:number}>} params.items
+ * @param {Array<{name:string, tier?:string, color?:string, price:number, mount?:string}>} params.items
  * @param {number} params.totalAmount — in euro's
  * @param {{name?:string, line1?:string, postalCode?:string, city?:string}|null} params.address
  */
@@ -22,7 +22,7 @@ export function buildOrderConfirmationEmail({ orderNumber, customerName, custome
       <td style="padding:12px 0;border-bottom:1px solid #f1f5f9;">
         <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${escapeHtml(item.name)}</p>
         <p style="margin:4px 0 0;font-size:13px;color:#64748b;">
-          ${item.tier ? `Uitvoering: ${escapeHtml(item.tier)}` : ''}${item.tier && item.color ? ' · ' : ''}${item.color ? `Kleur: ${escapeHtml(item.color)}` : ''}${(item.tier || item.color) ? ' · ' : ''}Aantal: 1
+          ${item.tier ? `Uitvoering: ${escapeHtml(item.tier)}` : ''}${item.tier && item.color ? ' · ' : ''}${item.color ? `Kleur: ${escapeHtml(item.color)}` : ''}${(item.tier || item.color) ? ' · ' : ''}Aantal: 1${item.mount === 'vertical' ? ' · Verticale montage' : ''}
         </p>
       </td>
       <td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-size:15px;color:#2563eb;font-weight:700;text-align:right;white-space:nowrap;">${EUR(item.price)}</td>
@@ -80,7 +80,7 @@ export function buildOrderConfirmationEmail({ orderNumber, customerName, custome
   });
 
   const itemsText = items.map((item) => {
-    const details = [item.tier ? `Uitvoering: ${item.tier}` : null, item.color ? `Kleur: ${item.color}` : null, 'Aantal: 1'].filter(Boolean).join(', ');
+    const details = [item.tier ? `Uitvoering: ${item.tier}` : null, item.color ? `Kleur: ${item.color}` : null, 'Aantal: 1', item.mount === 'vertical' ? 'Verticale montage' : null].filter(Boolean).join(', ');
     return `- ${item.name} (${details}) — ${EUR(item.price)}`;
   }).join('\n');
 

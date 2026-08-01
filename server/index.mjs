@@ -338,7 +338,7 @@ app.post('/api/create-payment-intent', async (req, res) => {
         // meerdere producten) voor de e-mails. product_name/tier/color zijn
         // korte, vlakke, direct leesbare velden voor het Stripe-dashboard —
         // bij meerdere producten kommagescheiden.
-        items: JSON.stringify(items.map(i => ({ name: i.name, tier: i.tier, color: i.selectedColor, price: i.priceNum }))),
+        items: JSON.stringify(items.map(i => ({ name: i.name, tier: i.tier, color: i.selectedColor, price: i.priceNum, mount: i.mountType }))),
         product_name: items.map(i => i.name).join(', '),
         product_tier: items.map(i => i.tier).filter(Boolean).join(', '),
         product_color: items.map(i => i.selectedColor).filter(Boolean).join(', '),

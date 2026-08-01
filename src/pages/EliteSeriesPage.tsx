@@ -1,14 +1,26 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { getSpecValue } from '../components/CubeModelSelector';
 import AddToCartButton from '../components/AddToCartButton';
+import {
+  PRODUCT_SPECS,
+  OS_TEXT,
+  WARRANTY_TEXT,
+  GPU_TECH_NOTE,
+  TRANSPARENCY_NOTE,
+  VERTICAL_MOUNT_SURCHARGE,
+  VERTICAL_MOUNT_NOTE,
+  formatGpu,
+  formatRam,
+  formatPsu,
+  getKeySpecLines,
+} from '../data/productSpecs';
 
 const TRUST_ITEMS = [
   'Direct klaar voor gebruik',
   'Windows & drivers geïnstalleerd',
   'Professioneel gebouwd en getest',
-  '2 jaar garantie',
+  WARRANTY_TEXT,
 ];
 
 interface EliteSeriesPageProps {
@@ -22,23 +34,38 @@ interface EliteSeriesPageProps {
 // zelf verandert.
 export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageProps) {
   const [added, setAdded] = useState(false);
+  const [mount, setMount] = useState<'horizontal' | 'vertical'>('horizontal');
 
+  const spec = PRODUCT_SPECS[build.id];
+  const keySpecLines = getKeySpecLines(spec);
   const specRows = [
-    ['Processor', getSpecValue(build.specs, 'CPU:')],
-    ['Videokaart', getSpecValue(build.specs, 'GPU:')],
-    ['Werkgeheugen', getSpecValue(build.specs, 'RAM:')],
-    ['Opslag', getSpecValue(build.specs, 'Opslag:')],
-    ['Koeling', getSpecValue(build.specs, 'Koeling:')],
-    ['Voeding', getSpecValue(build.specs, 'Voeding:')],
-    ['Besturingssysteem', 'Windows 11'],
+    ['Processor', spec.cpu],
+    ['Videokaart', formatGpu(spec)],
+    ['Werkgeheugen', formatRam(spec)],
+    ['Opslag', spec.storage],
+    ['Koeling', spec.cooling],
+    ['Voeding', formatPsu(spec)],
+    ['Besturingssysteem', OS_TEXT],
   ];
+
+  const mountSurcharge = mount === 'vertical' ? VERTICAL_MOUNT_SURCHARGE : 0;
+  const totalPriceNum = build.priceNum + mountSurcharge;
 
   const handleAdd = () => {
     if (added) return;
     // Elite heeft geen kleurkeuze (build.image bevat alleen 'black'), maar
     // krijgt toch een expliciete selectedColor mee zodat elk winkelwagen-
-    // item altijd hetzelfde, voorspelbare veld heeft.
-    onAddToCart({ ...build, selectedColor: 'black' });
+    // item altijd hetzelfde, voorspelbare veld heeft. mountType/mountSurcharge
+    // en de aangepaste prijs gaan mee zodat winkelwagen, checkout, Stripe-
+    // metadata en e-mails allemaal dezelfde, al berekende waarde gebruiken.
+    onAddToCart({
+      ...build,
+      selectedColor: 'black',
+      mountType: mount,
+      mountSurcharge,
+      priceNum: totalPriceNum,
+      price: `€ ${totalPriceNum.toLocaleString('nl-NL')}`,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -100,7 +127,7 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-brand-400">{build.tier}</span>
             <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-2 mb-2">{build.name}</h2>
-            <span className="block text-3xl sm:text-4xl font-black text-white mb-5 sm:mb-6">{build.price}</span>
+            <span className="block text-3xl sm:text-4xl font-black text-white mb-5 sm:mb-6">€ {totalPriceNum.toLocaleString('nl-NL')}</span>
 
             {/* Belangrijkste USP, prominent direct onder de prijs */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 mb-8 sm:mb-10">
@@ -118,14 +145,61 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
 
             <p className="text-slate-400 leading-relaxed mb-10 sm:mb-12 text-base sm:text-lg">{build.description}</p>
 
+            {/* Belangrijkste specificaties — scanbaar overzicht, vóór de
+                uitgebreide lijst. */}
+            <div className="mb-10 sm:mb-12 bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-5 sm:mb-6">Belangrijkste specificaties</h3>
+              <div className="space-y-3">
+                {keySpecLines.map(([label, value]) => (
+                  <div key={label} className="flex items-start justify-between gap-4 text-sm sm:text-base">
+                    <span className="text-slate-500 shrink-0">{label}</span>
+                    <span className="font-semibold text-white text-right">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed mt-5 pt-5 border-t border-white/10">
+                {GPU_TECH_NOTE}
+              </p>
+            </div>
+
+            {/* Videokaartmontage — standaard horizontaal, optioneel verticaal
+                tegen meerprijs. Beïnvloedt de prijs die met de winkelwagen
+                meegaat. */}
+            <div className="mb-10 sm:mb-12">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 sm:mb-5">Montage videokaart</h3>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMount('horizontal')}
+                  className={`px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border text-xs sm:text-sm font-bold transition-colors text-left ${
+                    mount === 'horizontal' ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
+                  }`}
+                >
+                  Standaard horizontaal
+                  <span className="block font-normal text-[11px] mt-0.5 opacity-80">Inbegrepen</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMount('vertical')}
+                  className={`px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border text-xs sm:text-sm font-bold transition-colors text-left ${
+                    mount === 'vertical' ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
+                  }`}
+                >
+                  Verticale montage
+                  <span className="block font-normal text-[11px] mt-0.5 opacity-80">+ €{VERTICAL_MOUNT_SURCHARGE}</span>
+                </button>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed mt-3">{VERTICAL_MOUNT_NOTE}</p>
+            </div>
+
             {/* Specificaties — rustige lijst, geen losse omkaderde blokken */}
             <div className="mb-10 sm:mb-12">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-5 sm:mb-6">Specificaties</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-5 sm:mb-6">Alle specificaties</h3>
               <div className="space-y-3.5">
                 {specRows.map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between border-b border-white/10 pb-3.5 text-sm sm:text-base">
-                    <span className="text-slate-500">{label}</span>
-                    <span className="font-semibold text-white">{value}</span>
+                  <div key={label} className="flex items-start justify-between gap-4 border-b border-white/10 pb-3.5 text-sm sm:text-base">
+                    <span className="text-slate-500 shrink-0">{label}</span>
+                    <span className="font-semibold text-white text-right">{value}</span>
                   </div>
                 ))}
               </div>
@@ -144,11 +218,14 @@ export default function EliteSeriesPage({ build, onAddToCart }: EliteSeriesPageP
             {/* In winkelwagen, tenzij het product niet leverbaar is */}
             <AddToCartButton stockStatus={build.stockStatus} added={added} onClick={handleAdd} />
 
-            {/* Transparantie over productfoto's — subtiel, geen aandacht trekken */}
-            <div className="mt-8 sm:mt-10">
+            {/* Transparantie over productfoto's en onderdelen — subtiel, geen aandacht trekken */}
+            <div className="mt-8 sm:mt-10 space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Goed om te weten</p>
               <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed">
                 Afbeeldingen dienen ter illustratie. Om de beste prijs en snelle levering te garanderen, kunnen merken en uiterlijke details van sommige onderdelen afwijken. De vermelde specificaties en prestaties blijven altijd gelijk of beter.
+              </p>
+              <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed">
+                {TRANSPARENCY_NOTE}
               </p>
             </div>
           </div>

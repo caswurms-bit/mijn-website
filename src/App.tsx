@@ -45,15 +45,7 @@ const BUILDS = [
     target: '1080p High / 1440p Ready',
     shortDesc: 'Perfect voor 1080p gaming.',
     description: 'RTX 5060 en een Intel Core i5-14400F voor soepel 1080p gamen. Volledig klaar aan huis — drivers en Windows al ingesteld.',
-    specs: [
-      'CPU: Intel Core i5-14400F',
-      'GPU: RTX 5060',
-      'RAM: 16 GB DDR4',
-      'Opslag: 1 TB NVMe SSD',
-      'Koeling: 240mm AIO',
-      'Voeding: 650W 80+ Bronze',
-    ],
-    warranty: '2 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar garantie op de complete pc.',
     note: 'Volledig geïnstalleerd geleverd — aansluiten en direct gamen.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -72,15 +64,7 @@ const BUILDS = [
     badge: 'Meest gekozen',
     shortDesc: 'De beste prijs/prestatie.',
     description: 'RTX 5060 Ti en 32 GB geheugen voor moeiteloos 1440p gamen, multitasken en streamen. Onze meest gekozen build.',
-    specs: [
-      'CPU: Intel Core i5-14400F',
-      'GPU: RTX 5060 Ti',
-      'RAM: 32 GB DDR4',
-      'Opslag: 1 TB NVMe SSD',
-      'Koeling: 240mm AIO',
-      'Voeding: 650W 80+ Bronze',
-    ],
-    warranty: '2 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar garantie op de complete pc.',
     note: 'Meest gekozen — de beste prijs/prestatie van onze lineup.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -98,15 +82,7 @@ const BUILDS = [
     target: 'Ultra Gaming Performance',
     shortDesc: 'Maximale prestaties voor fanatieke gamers.',
     description: 'RTX 5070 en 32 GB geheugen voor ultra instellingen zonder concessies. Voor wie alles uit zijn monitor wil halen.',
-    specs: [
-      'CPU: Intel Core i5-14400F',
-      'GPU: RTX 5070',
-      'RAM: 32 GB DDR4',
-      'Opslag: 1 TB NVMe SSD',
-      'Koeling: 240mm AIO',
-      'Voeding: 750W 80+ Gold',
-    ],
-    warranty: '2 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar garantie op de complete pc.',
     note: 'Direct leverbaar — zelfde kwaliteit en zorgvuldigheid als alle andere builds.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -124,15 +100,7 @@ const BUILDS = [
     target: 'High-End Gaming & Creatie',
     shortDesc: 'Onze krachtigste build. Voor wie geen compromissen wil en het maximale wil uit zijn setup.',
     description: 'De Elite is voor wie het maximale wil — en dat ook weet. Ryzen 7, RTX 5070 Ti, DDR5 en 2 TB opslag. Dit systeem is gebouwd voor zware games, streaming, video-editing en alles tegelijk. De 360mm AIO en het volledige glasdesign zijn bewust gekozen: dit is een pc om trots op te zijn, niet alleen om te presteren.',
-    specs: [
-      'CPU: Ryzen 7 9700X',
-      'GPU: RTX 5070 Ti',
-      'RAM: 32 GB DDR5',
-      'Opslag: 2 TB NVMe SSD',
-      'Koeling: 360mm AIO',
-      'Voeding: 850W 80+ Gold',
-    ],
-    warranty: '2 jaar hardwaregarantie op de complete pc.',
+    warranty: '2 jaar garantie op de complete pc.',
     note: 'Onze flagship build — voor wie het maximale wil, zonder concessies.',
     stockStatus: 'in-stock',
     deliveryText: 'Verzending binnen 3 werkdagen',
@@ -934,6 +902,9 @@ const CartPanelContent = ({
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-900 text-sm leading-tight">{item.name}</p>
                 <p className="text-slate-400 text-xs mt-0.5">{item.target}</p>
+                {item.mountType === 'vertical' && (
+                  <p className="text-slate-400 text-xs mt-0.5">Verticale montage (+€{item.mountSurcharge})</p>
+                )}
                 <p className="text-brand-600 font-black text-sm mt-1">{item.price}</p>
               </div>
               <button

@@ -13,11 +13,6 @@ export function isCubeModel(value: string | null): value is CubeModel {
   return (CUBE_MODELS as readonly string[]).includes(value ?? '');
 }
 
-export function getSpecValue(specs: string[], prefix: string) {
-  const match = specs.find((s) => s.startsWith(prefix));
-  return match ? match.slice(prefix.length).trim() : '—';
-}
-
 // Premium segmented control (geen dropdown, geen drag-slider): de blauwe
 // achtergrond is één gedeeld element (layoutId) dat vloeiend meeschuift
 // naar de actieve knop. Gebruikt op zowel de Cube Series-productpagina als

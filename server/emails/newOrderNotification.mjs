@@ -11,7 +11,7 @@ const EUR = (n) => `€ ${Number(n).toLocaleString('nl-NL')}`;
  * @param {string} params.orderNumber
  * @param {string} params.customerName
  * @param {string} params.customerEmail
- * @param {Array<{name:string, tier?:string, color?:string, price:number}>} params.items
+ * @param {Array<{name:string, tier?:string, color?:string, price:number, mount?:string}>} params.items
  * @param {number} params.totalAmount
  * @param {{name?:string, line1?:string, postalCode?:string, city?:string}|null} params.address
  * @param {string} params.paymentIntentId
@@ -31,7 +31,7 @@ export function buildNewOrderEmail({ orderNumber, customerName, customerEmail, i
 
   const productRows = items.map((item) => [
     'Product',
-    `${escapeHtml(item.name)}${item.tier ? ` · Uitvoering: ${escapeHtml(item.tier)}` : ''}${item.color ? ` · Kleur: ${escapeHtml(item.color)}` : ''} · Aantal: 1 · ${EUR(item.price)}`,
+    `${escapeHtml(item.name)}${item.tier ? ` · Uitvoering: ${escapeHtml(item.tier)}` : ''}${item.color ? ` · Kleur: ${escapeHtml(item.color)}` : ''} · Aantal: 1${item.mount === 'vertical' ? ' · Verticale montage' : ''} · ${EUR(item.price)}`,
   ]);
 
   const bodyHtml = `
@@ -59,7 +59,7 @@ export function buildNewOrderEmail({ orderNumber, customerName, customerEmail, i
   const html = emailLayout({ title: subject, bodyHtml });
 
   const productLines = items.map((item) =>
-    `- ${item.name}${item.tier ? ` · Uitvoering: ${item.tier}` : ''}${item.color ? ` · Kleur: ${item.color}` : ''} · Aantal: 1 · ${EUR(item.price)}`
+    `- ${item.name}${item.tier ? ` · Uitvoering: ${item.tier}` : ''}${item.color ? ` · Kleur: ${item.color}` : ''} · Aantal: 1${item.mount === 'vertical' ? ' · Verticale montage' : ''} · ${EUR(item.price)}`
   ).join('\n');
 
   const text = `Nieuwe bestelling ontvangen.
